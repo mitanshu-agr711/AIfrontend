@@ -142,6 +142,92 @@ export default function Home() {
             </div>
           </div>
 
+          <section className="py-16 ">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">The Transformation Journey</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Before Column */}
+            <div className="bg-gray-100 rounded-xl shadow-md p-6 relative">
+              <div className="absolute top-0 left-0 bg-red-500 text-white px-4 py-2 rounded-tl-xl font-bold">
+                BEFORE
+              </div>
+              <h3 className="text-xl font-bold mt-8 mb-4 text-red-600">Before Practice with AI</h3>
+              <ul className="space-y-3 text-black">
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-2">✗</span>
+                  <span>Uncertain responses with frequent pauses</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-2">✗</span>
+                  <span>Limited technical vocabulary and explanations</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-2">✗</span>
+                  <span>Difficulty handling unexpected questions</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-2">✗</span>
+                  <span>Lack of structured thought process</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-2">✗</span>
+                  <span>Anxiety and nervousness during interviews</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-2">✗</span>
+                  <span>Missed opportunities to highlight achievements</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* After Column */}
+            <div className="bg-gray-100 rounded-xl shadow-md p-6 relative">
+              <div className="absolute top-0 left-0 bg-green-500 text-white px-4 py-2 rounded-tl-xl font-bold">
+                AFTER
+              </div>
+              <h3 className="text-xl font-bold mt-8 mb-4 text-green-600">After Practice with AI</h3>
+              <ul className="space-y-3 text-black">
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Confident, clear, and concise communication</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Rich industry-specific vocabulary and examples</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Adaptability to challenging and unexpected questions</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Logical and structured response framework</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Calm and composed interview presence</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Strategic highlighting of relevant accomplishments</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="text-center mt-12">
+            <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+              Our users report an average of <span className="font-bold text-green-600">70% improvement</span> in
+              interview confidence and <span className="font-bold text-green-600">40% higher</span> success rate in job
+              applications after practicing with our AI interview tool.
+            </p>
+          </div>
+        </div>
+      </section>
+
+
+
           <div className="text-center mt-12">
             <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full inline-flex items-center transition-colors">
               Get Started Now
