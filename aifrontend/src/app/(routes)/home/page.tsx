@@ -1,17 +1,32 @@
 
 
 "use client"
-
+import { FlickeringGrid } from "@/components/magicui/flickering-grid"
 import Image from "next/image"
-import { useState } from "react"
+import { useRef, useState, useEffect } from "react";
 import { ArrowRight, CheckCircle, Clock, FileText } from "lucide-react"
 
 export default function Home() {
-  const [isHovering, setIsHovering] = useState(false)
+  //   const [isHovering, setIsHovering] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    function updateSize() {
+      if (containerRef.current) {
+        setSize({
+          width: containerRef.current.offsetWidth,
+          height: containerRef.current.offsetHeight,
+        });
+      }
+    }
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
-     
+    <div className="min-h-screen flex flex-col ">
+
       <nav className="sticky top-0 z-50 bg-gray-900 text-white shadow-md">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
@@ -38,17 +53,46 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-8">Welcome to the AI Interview Tool</h1>
+      <section className="relative py-16 overflow-hidden">
+        {/* FlickeringGrid as background */}
+        <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
+          <FlickeringGrid
+            className="w-full h-full [mask-image:radial-gradient(450px_circle_at_center,white,transparent)]"
+            squareSize={4}
+            gridGap={6}
+            color="#60A5FA"
+            maxOpacity={0.5}
+            flickerChance={0.1}
+            width={size.width}
+            height={size.height}
+          />
+        </div>
+        {/* Foreground content */}
+        <div className="relative z-10 container mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-8">
+            Welcome to the AI Interview Tool
+          </h1>
+          <div className="flex justify-center items-center mt-10 gap-0">
+            <div className="wave-hand">
+              <Image
+                src="/hand.png"
+                alt="Hand"
+                width={150}
+                height={300}
+                priority
+              />
+            </div>
+
+
             <Image
-              src="/ai.webp"
-              alt="AI Interview Assistant"
-              width={500}
+              src="/robot.png"
+              alt="Robot"
+              width={250}
               height={500}
-              className="mx-auto mt-10 transition-transform duration-300 transform hover:translate-y-[-10px]"
               priority
             />
+          </div>
+
         </div>
       </section>
 
@@ -64,8 +108,8 @@ export default function Home() {
               </span>
 
               <span className="block">
-                It's not just about <span className="text-pink-600 font-semibold">getting things done</span> — it's
-                about <span className="px-1 font-bold">learning how</span> it's done.
+                Its not just about <span className="text-pink-600 font-semibold">getting things done</span> — its
+                about <span className="px-1 font-bold">learning how</span> its done.
               </span>
 
               <span className="block">
@@ -100,7 +144,7 @@ export default function Home() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-           
+
             <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:transform hover:scale-105">
               <div className="p-6">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
@@ -114,7 +158,7 @@ export default function Home() {
               </div>
             </div>
 
-          
+
             <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:transform hover:scale-105">
               <div className="p-6">
                 <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
@@ -143,88 +187,88 @@ export default function Home() {
           </div>
 
           <section className="py-16 ">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">The Transformation Journey</h2>
+            <div className="container mx-auto px-4">
+              <h2 className="text-3xl font-bold text-center mb-12">The Transformation Journey</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Before Column */}
-            <div className="bg-gray-100 rounded-xl shadow-md p-6 relative">
-              <div className="absolute top-0 left-0 bg-red-500 text-white px-4 py-2 rounded-tl-xl font-bold">
-                BEFORE
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                {/* Before Column */}
+                <div className="bg-gray-100 rounded-xl shadow-md p-6 relative">
+                  <div className="absolute top-0 left-0 bg-red-500 text-white px-4 py-2 rounded-tl-xl font-bold">
+                    BEFORE
+                  </div>
+                  <h3 className="text-xl font-bold mt-8 mb-4 text-red-600">Before Practice with AI</h3>
+                  <ul className="space-y-3 text-black">
+                    <li className="flex items-start">
+                      <span className="text-red-500 mr-2">✗</span>
+                      <span>Uncertain responses with frequent pauses</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-red-500 mr-2">✗</span>
+                      <span>Limited technical vocabulary and explanations</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-red-500 mr-2">✗</span>
+                      <span>Difficulty handling unexpected questions</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-red-500 mr-2">✗</span>
+                      <span>Lack of structured thought process</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-red-500 mr-2">✗</span>
+                      <span>Anxiety and nervousness during interviews</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-red-500 mr-2">✗</span>
+                      <span>Missed opportunities to highlight achievements</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* After Column */}
+                <div className="bg-gray-100 rounded-xl shadow-md p-6 relative">
+                  <div className="absolute top-0 left-0 bg-green-500 text-white px-4 py-2 rounded-tl-xl font-bold">
+                    AFTER
+                  </div>
+                  <h3 className="text-xl font-bold mt-8 mb-4 text-green-600">After Practice with AI</h3>
+                  <ul className="space-y-3 text-black">
+                    <li className="flex items-start">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span>Confident, clear, and concise communication</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span>Rich industry-specific vocabulary and examples</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span>Adaptability to challenging and unexpected questions</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span>Logical and structured response framework</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span>Calm and composed interview presence</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span>Strategic highlighting of relevant accomplishments</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
-              <h3 className="text-xl font-bold mt-8 mb-4 text-red-600">Before Practice with AI</h3>
-              <ul className="space-y-3 text-black">
-                <li className="flex items-start">
-                  <span className="text-red-500 mr-2">✗</span>
-                  <span>Uncertain responses with frequent pauses</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-red-500 mr-2">✗</span>
-                  <span>Limited technical vocabulary and explanations</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-red-500 mr-2">✗</span>
-                  <span>Difficulty handling unexpected questions</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-red-500 mr-2">✗</span>
-                  <span>Lack of structured thought process</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-red-500 mr-2">✗</span>
-                  <span>Anxiety and nervousness during interviews</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-red-500 mr-2">✗</span>
-                  <span>Missed opportunities to highlight achievements</span>
-                </li>
-              </ul>
-            </div>
 
-            {/* After Column */}
-            <div className="bg-gray-100 rounded-xl shadow-md p-6 relative">
-              <div className="absolute top-0 left-0 bg-green-500 text-white px-4 py-2 rounded-tl-xl font-bold">
-                AFTER
+              <div className="text-center mt-12">
+                <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+                  Our users report an average of <span className="font-bold text-green-600">70% improvement</span> in
+                  interview confidence and <span className="font-bold text-green-600">40% higher</span> success rate in job
+                  applications after practicing with our AI interview tool.
+                </p>
               </div>
-              <h3 className="text-xl font-bold mt-8 mb-4 text-green-600">After Practice with AI</h3>
-              <ul className="space-y-3 text-black">
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Confident, clear, and concise communication</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Rich industry-specific vocabulary and examples</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Adaptability to challenging and unexpected questions</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Logical and structured response framework</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Calm and composed interview presence</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Strategic highlighting of relevant accomplishments</span>
-                </li>
-              </ul>
             </div>
-          </div>
-
-          <div className="text-center mt-12">
-            <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-              Our users report an average of <span className="font-bold text-green-600">70% improvement</span> in
-              interview confidence and <span className="font-bold text-green-600">40% higher</span> success rate in job
-              applications after practicing with our AI interview tool.
-            </p>
-          </div>
-        </div>
-      </section>
+          </section>
 
 
 
@@ -237,7 +281,7 @@ export default function Home() {
         </div>
       </section>
 
-  
+
       <footer className="bg-gray-900 text-white mt-auto">
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
