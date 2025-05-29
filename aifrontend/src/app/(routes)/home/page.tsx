@@ -1,8 +1,8 @@
 
-
 "use client"
-import { FlickeringGrid } from "@/components/magicui/flickering-grid"
-import Image from "next/image"
+// import { FlickeringGrid } from "@/components/magicui/flickering-grid"
+// import Image from "next/image"
+import Logo from "../../../lib/logo/page"
 import { useRef, useState, useEffect } from "react";
 import { ArrowRight, CheckCircle, Clock, FileText } from "lucide-react"
 
@@ -30,7 +30,7 @@ export default function Home() {
       <nav className="sticky top-0 z-50 bg-gray-900 text-white shadow-md">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-xl font-bold mb-4 md:mb-0">AI Interview Tool</div>
+            <div className="text-xl font-bold mb-4 md:mb-0"><Logo /> AI Interview Tool</div>
             <ul className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-8">
               <li>
                 <a href="/about" className="hover:text-blue-400 transition-colors">
@@ -53,8 +53,8 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative py-16 overflow-hidden">
-        {/* FlickeringGrid as background */}
+      {/* <section className="relative py-16 overflow-hidden">
+
         <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
           <FlickeringGrid
             className="w-full h-full [mask-image:radial-gradient(450px_circle_at_center,white,transparent)]"
@@ -67,7 +67,7 @@ export default function Home() {
             height={size.height}
           />
         </div>
-        {/* Foreground content */}
+       
         <div className="relative z-10 container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-8">
             Welcome to the AI Interview Tool
@@ -94,8 +94,19 @@ export default function Home() {
           </div>
 
         </div>
-      </section>
+      </section> */}
+      <section className="w-full">
 
+        {/* writing heading */}
+        <div>
+          <p className="text-[6rem]  font-bold text-center mt-10">
+            Challenge Yourself. 
+          </p>
+          <div className="text-[6rem] font-bold text-center">Conquer Tomorrow.</div>
+
+        </div>
+
+      </section>
       {/* About Section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
