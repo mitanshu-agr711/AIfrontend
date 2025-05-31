@@ -5,7 +5,7 @@
 import Logo from "../../../lib/logo/page"
 import { useRef, useState, useEffect } from "react";
 import { ArrowRight, CheckCircle, Clock, FileText } from "lucide-react"
-
+import { Button } from "../../../components/ui/moving-border";
 export default function Home() {
   //   const [isHovering, setIsHovering] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null);
@@ -95,15 +95,22 @@ export default function Home() {
 
         </div>
       </section> */}
-      <section className="w-full">
-
+      <section className="w-vw">
         {/* writing heading */}
         <div>
           <p className="text-[6rem]  font-bold text-center mt-10">
-            Challenge Yourself. 
+            Challenge Yourself.
           </p>
           <div className="text-[6rem] font-bold text-center">Conquer Tomorrow.</div>
 
+        </div>
+        <div className="flex items-center justify-center mt-10">
+          <Button
+            borderRadius="1.75rem"
+            className="bg-white dark:bg-slate-900 text-black dark:text-white border-neutral-200 dark:border-slate-800 text-xl font-semibold hover:bg-neutral-100 dark:hover:bg-slate-800 transition-colors duration-300 px-8 py-4 flex items-center gap-2"
+          >
+            Get Start
+          </Button>
         </div>
 
       </section>

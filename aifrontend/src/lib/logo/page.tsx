@@ -42,7 +42,7 @@ const AnimatedIVLogo: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex  items-center justify-center min-h-screen overflow-hidden relative">
+    <div className="flex  items-center justify-center relative">
       {/* Background particles */}
       {/* <div className="absolute inset-0">
         {Array.from({ length: 50 }).map((_, i) => (
