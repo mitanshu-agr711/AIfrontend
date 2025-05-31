@@ -6,9 +6,12 @@ import Logo from "../../../lib/logo/page"
 import { useRef, useState, useEffect } from "react";
 import { ArrowRight, CheckCircle, Clock, FileText } from "lucide-react"
 import { Button } from "../../../components/ui/moving-border";
+import { WavyBackground } from "../../../components/wavyBackground/wave";
+// import { BackgroundGradient } from "../../../components/gradient";
+import { Menu, PanelRightClose } from "lucide-react";
+
 export default function Home() {
   //   const [isHovering, setIsHovering] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   useEffect(() => {
     function updateSize() {
@@ -24,34 +27,132 @@ export default function Home() {
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  return (
-    <div className="min-h-screen flex flex-col ">
 
-      <nav className="sticky top-0 z-50 bg-gray-900 text-white shadow-md">
+const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+
+useEffect(() => {
+  const video = videoRef.current;
+  const container = containerRef.current;
+  if (!video || !container) return;
+
+  video.pause();
+
+  const handleScroll = () => {
+    const rect = container.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+    
+    // Simplified: video plays as container scrolls through viewport
+    const scrollProgress = Math.min(1, Math.max(0, 
+      (windowHeight - rect.top) / (windowHeight + rect.height)
+    ));
+
+    if (video.duration && !isNaN(video.duration)) {
+      video.currentTime = scrollProgress * video.duration;
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    handleScroll();
+  };
+
+  video.addEventListener('loadedmetadata', handleLoadedMetadata);
+  window.addEventListener("scroll", handleScroll);
+  window.addEventListener("resize", handleScroll);
+  
+  handleScroll();
+  
+  return () => {
+    video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    window.removeEventListener("scroll", handleScroll);
+    window.removeEventListener("resize", handleScroll);
+  };
+}, []);
+
+  const [menuOpen, setMenuOpen] = useState(false);
+
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#cfdfeb' }}>
+
+      <nav className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 
+                flex justify-center items-center w-1/2 
+                rounded-full bg-gradient-to-r from-white/60 to-transparent 
+                backdrop-blur-md shadow-md p-4 mb-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-xl font-bold mb-4 md:mb-0"><Logo /> AI Interview Tool</div>
-            <ul className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-8">
-              <li>
-                <a href="/about" className="hover:text-blue-400 transition-colors">
+            <Logo />
+            {/* Hamburger Icon (Mobile Only) */}
+            <button
+              className="md:hidden ml-auto text-2xl"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              aria-label="Toggle navigation menu"
+            >
+              {menuOpen ? (
+                <PanelRightClose size={32} />
+              ) : (
+                <Menu size={32} />
+              )}
+            </button>
+
+            {/* Desktop Menu */}
+            <ul className="hidden md:flex flex-row space-x-8 ml-8 text-2xl font-semibold">
+              <li className="transition-all duration-300 hover:rounded-full hover:border border-blue-400 px-2 py-2">
+                <a href="/about" className="block font-semibold ">
                   About
                 </a>
               </li>
-              <li>
-                <a href="/contact" className="hover:text-blue-400 transition-colors">
+
+              <li className="transition-all duration-300 hover:rounded-full hover:border border-blue-400 px-2 py-2">
+                <a href="/contact" className="font-semibold">
                   Contact
                 </a>
               </li>
-              <li>
-                <a href="/services" className="hover:text-blue-400 transition-colors">
+              <li className="transition-all duration-300 hover:rounded-full hover:border border-blue-400 px-2 py-2">
+                <a href="/services" className="font-semibold">
                   Services
                 </a>
               </li>
             </ul>
           </div>
+
+          {/* Mobile Menu */}
+          {menuOpen && (
+            <div className="md:hidden mt-2">
+              <ul className="flex flex-col space-y-2 z-50 bg-gradient-to-b from-white/60 to-transparent backdrop-blur-md shadow-md py-4 font-semibold">
+                <li className="hover:bg-gray-600">
+                  <a
+                    // href="/about"
+                    className="block px-4 py-2"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    About
+                  </a>
+                </li>
+                <li className="hover:bg-gray-600">
+                  <a
+                    // href="/contact"
+                    className="block px-4 py-2"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Contact
+                  </a>
+                </li>
+                <li className="hover:bg-gray-600">
+                  <a
+                    // href="/services"
+                    className="block px-4 py-2"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Services
+                  </a>
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       </nav>
-
       {/* Hero Section */}
       {/* <section className="relative py-16 overflow-hidden">
 
@@ -95,62 +196,68 @@ export default function Home() {
 
         </div>
       </section> */}
-      <section className="w-vw">
+      <section className="w-vw mt-30">
         {/* writing heading */}
         <div>
-          <p className="text-[6rem]  font-bold text-center mt-10">
+          <p className="text-4xl sm:text-[3rem] md:text-[4rem] lg:text-[7rem] font-bold  text-center mt-10 ">
             Challenge Yourself.
           </p>
-          <div className="text-[6rem] font-bold text-center">Conquer Tomorrow.</div>
-
+          <div className="text-4xl sm:text-[3rem] md:text-[4rem]  lg:text-[6rem] font-bold   text-center m-6">Conquer Tomorrow.</div>
         </div>
-        <div className="flex items-center justify-center mt-10">
+        <p className="block  text-center m-5 text-xl mx-auto">"Interview prep just got real — build your zone, boost your skills, and bring your friends!"</p>
+
+        <div className="flex items-center justify-center m-10">
           <Button
             borderRadius="1.75rem"
-            className="bg-white dark:bg-slate-900 text-black dark:text-white border-neutral-200 dark:border-slate-800 text-xl font-semibold hover:bg-neutral-100 dark:hover:bg-slate-800 transition-colors duration-300 px-8 py-4 flex items-center gap-2"
+            className="bg-white dark:bg-slate-900 text-black dark:text-white border-neutral-200 dark:border-slate-800 text-xl font-semibold hover:bg-sky-200 dark:hover:bg-slate-800 transition-colors duration-300 px-8 py-4 flex items-center gap-2"
           >
             Get Start
           </Button>
         </div>
-
       </section>
+
+      {/* video Section */}
+      <section ref={containerRef} className="flex items-center justify-center m-5">
+
+       <video
+        ref={videoRef}
+        width="640"
+        height="360"
+        muted
+        // No controls attribute!
+        style={{
+          background: "#000",
+          boxShadow: "0 2px 32px #0002",
+          borderRadius: 16,
+          pointerEvents: "none", // Prevent user interaction
+        }}
+        playsInline
+      >
+        <source src="/robot.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+      <style jsx global>{`
+        /* Hide controls in all browsers, including fullscreen */
+        video::-webkit-media-controls,
+        video::-webkit-media-controls-enclosure {
+          display: none !important;
+        }
+      `}</style>
+      </section>
+
+      <WavyBackground className="max-w-5xl mx-auto pb-40">
+
+        <p className="m-10 flex font-semibold justify-center items-center text-2xl">"Prepare like a pro — your personal interview lab awaits. Invite friends and level up together!"</p>
+        <div className="flex justify-center items-center tex-center text-xl mx-auto w-2/3">Answer a few quick questions about your experience and goals to set up your ideal interview workspace. Practice
+          confidently, and visualize your improvement with a detailed progress graph once you finish. Share the
+          journey with friends and motivate each other!</div>
+
+      </WavyBackground>
+
+
       {/* About Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Why Practice with AI?</h2>
-          <div className="max-w-3xl mx-auto  p-8 rounded-xl shadow-lg">
-            <p className="text-lg leading-relaxed space-y-4">
-              <span className="block">
-                While actual <span className="text-blue-600 font-semibold">AI gives you answers</span>, practicing with
-                AI helps you understand the <span className=" px-1 font-bold">why</span> behind them.
-              </span>
+      <section>
 
-              <span className="block">
-                Its not just about <span className="text-pink-600 font-semibold">getting things done</span> — its
-                about <span className="px-1 font-bold">learning how</span> its done.
-              </span>
-
-              <span className="block">
-                You develop <span className="text-cyan-600 font-semibold">critical thinking</span>, refine your
-                approach, and truly grasp the
-                <span className="text-purple-600 font-semibold"> logic behind decisions</span>.
-              </span>
-
-              <span className="block">
-                You also <span className="text-rose-600 font-semibold">check your progress</span>,
-                <span className="text-lime-600 font-semibold"> increase your confidence</span>, and build
-                <span className="text-orange-600 font-semibold"> independence</span> — skills no tool can replace.
-              </span>
-
-              <span className="block mt-6 italic text-center">
-                <span className="text-sky-600 font-medium block">Train with AI, not just on AI.</span>
-                <span className="text-indigo-600 font-medium">
-                  Practice makes precision — and AI is your smartest partner.
-                </span>
-              </span>
-            </p>
-          </div>
-        </div>
       </section>
 
       {/* Features Section */}

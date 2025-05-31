@@ -43,21 +43,7 @@ const AnimatedIVLogo: React.FC = () => {
 
   return (
     <div className="flex  items-center justify-center relative">
-      {/* Background particles */}
-      {/* <div className="absolute inset-0">
-        {Array.from({ length: 50 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-cyan-400 rounded-full opacity-20"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animation: `twinkle ${2 + Math.random() * 3}s ease-in-out infinite ${Math.random() * 2}s`,
-            }}
-          />
-        ))}
-      </div> */}
-      {/* No background particles or circle effects */}
+      
       {/* Main logo */}
       <div className="relative z-10 flex items-center justify-center">
         {/* Letter I */}
@@ -142,16 +128,7 @@ const AnimatedIVLogo: React.FC = () => {
         <div className={`absolute inset-0 transition-all duration-1000 ${isComplete ? "opacity-100" : "opacity-0"}`}>
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 blur-2xl animate-pulse" />
         </div>
-      </div>
-
-      {/* Energy rings */}
-      {/* <div className={`absolute inset-0 transition-all duration-1000 ${animationStage >= 4 ? "opacity-100" : "opacity-0"}`}>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <div className="w-96 h-96 border-2 border-cyan-500/30 rounded-full animate-ping" />
-          <div className="absolute inset-0 w-96 h-96 border-2 border-purple-500/30 rounded-full animate-ping" style={{ animationDelay: "0.5s" }} />
-          <div className="absolute inset-0 w-96 h-96 border-2 border-pink-500/30 rounded-full animate-ping" style={{ animationDelay: "1s" }} />
-        </div>
-      </div> */}
+      </div> 
 
       {/* Custom CSS for animations */}
       <style jsx>{`
