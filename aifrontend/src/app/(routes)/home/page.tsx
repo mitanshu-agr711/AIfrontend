@@ -9,6 +9,9 @@ import { Button } from "../../../components/ui/moving-border";
 import { WavyBackground } from "../../../components/wavyBackground/wave";
 // import { BackgroundGradient } from "../../../components/gradient";
 import { Menu, PanelRightClose } from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
 
 export default function Home() {
   //   const [isHovering, setIsHovering] = useState(false)
@@ -28,47 +31,53 @@ export default function Home() {
   }, []);
 
 
-const videoRef = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  
+  const containerRef = useRef<HTMLElement>(null);
 
+  useEffect(() => {
+    const video = videoRef.current;
+    const container = containerRef.current;
+    if (!video || !container) return;
 
-useEffect(() => {
-  const video = videoRef.current;
-  const container = containerRef.current;
-  if (!video || !container) return;
+   
+    video.pause();
 
-  video.pause();
+   
+    const onLoadedMetadata = () => {
+      
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
 
-  const handleScroll = () => {
-    const rect = container.getBoundingClientRect();
-    const windowHeight = window.innerHeight;
-    
-    // Simplified: video plays as container scrolls through viewport
-    const scrollProgress = Math.min(1, Math.max(0, 
-      (windowHeight - rect.top) / (windowHeight + rect.height)
-    ));
+     
+      gsap.to(video, {
+        currentTime: video.duration || 1, 
+        ease: "none",
+        scrollTrigger: {
+          trigger: container,        
+          start: "top top",          
+          end: "bottom top",         
+          scrub: true,               
+          pin: video,
+          pinSpacing: false,              
+         
+        },
+      });
+    };
 
-    if (video.duration && !isNaN(video.duration)) {
-      video.currentTime = scrollProgress * video.duration;
+   
+    if (video.readyState >= 1) {
+      onLoadedMetadata();
+    } else {
+      video.addEventListener("loadedmetadata", onLoadedMetadata);
     }
-  };
 
-  const handleLoadedMetadata = () => {
-    handleScroll();
-  };
-
-  video.addEventListener('loadedmetadata', handleLoadedMetadata);
-  window.addEventListener("scroll", handleScroll);
-  window.addEventListener("resize", handleScroll);
-  
-  handleScroll();
-  
-  return () => {
-    video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-    window.removeEventListener("scroll", handleScroll);
-    window.removeEventListener("resize", handleScroll);
-  };
-}, []);
+   
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+      video.removeEventListener("loadedmetadata", onLoadedMetadata);
+    };
+  }, []);
 
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -217,34 +226,39 @@ useEffect(() => {
       </section>
 
       {/* video Section */}
-      <section ref={containerRef} className="flex items-center justify-center m-5">
+      <section
+        ref={containerRef}
+        className="flex items-center justify-center m-5" >
 
-       <video
-        ref={videoRef}
-        width="640"
-        height="360"
-        muted
-        // No controls attribute!
-        style={{
-          background: "#000",
-          boxShadow: "0 2px 32px #0002",
-          borderRadius: 16,
-          pointerEvents: "none", // Prevent user interaction
-        }}
-        playsInline
-      >
-        <source src="/robot.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-      <style jsx global>{`
-        /* Hide controls in all browsers, including fullscreen */
-        video::-webkit-media-controls,
-        video::-webkit-media-controls-enclosure {
-          display: none !important;
-        }
-      `}</style>
+        <video
+          ref={videoRef}
+          width={640}
+          height={360}
+          muted
+          playsInline
+          controls={false}
+          style={{
+            background: "#000",
+            boxShadow: "0 2px 32px #0002",
+            borderRadius: 16,
+            pointerEvents: "none", 
+            width: "80vw",
+            maxWidth: 900,
+            height: "auto",
+          }}
+        >
+          <source src="/robot.mp4" type="video/mp4" />
+          
+          Your browser does not support the video tag.
+        </video>
+        
+        <style jsx global>{`
+          video::-webkit-media-controls,
+          video::-webkit-media-controls-enclosure {
+            display: none !important;
+          }
+        `}</style>
       </section>
-
       <WavyBackground className="max-w-5xl mx-auto pb-40">
 
         <p className="m-10 flex font-semibold justify-center items-center text-2xl">"Prepare like a pro — your personal interview lab awaits. Invite friends and level up together!"</p>
