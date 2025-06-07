@@ -43,12 +43,11 @@ const AnimatedIVLogo: React.FC = () => {
 
   return (
     <div className="flex  items-center justify-center relative">
-      
-      {/* Main logo */}
+
       <div className="relative z-10 flex items-center justify-center">
-        {/* Letter I */}
+    
         <div className="relative mr-4 flex items-center justify-center">
-          {/* Ball animation */}
+        
           <div
             className={`transform transition-all duration-1000 ease-out ${
               animationStage === 0
@@ -62,12 +61,12 @@ const AnimatedIVLogo: React.FC = () => {
                 : ""
             }`}
           >
-            <div className="w-8 h-8 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full shadow-lg shadow-cyan-500/50 animate-pulse">
+            <div className="w-4 h-4 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full shadow-lg shadow-cyan-500/50 animate-pulse">
               <div className="w-full h-full bg-gradient-to-br from-white/30 to-transparent rounded-full animate-spin" />
             </div>
           </div>
 
-          {/* Letter I */}
+        
           <div
             className={`absolute transform transition-all duration-800 ease-out ${
               animationStage < 3
@@ -75,15 +74,15 @@ const AnimatedIVLogo: React.FC = () => {
                 : "scale-100 opacity-100 rotate-0"
             }`}
           >
-            <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-cyan-400 via-blue-500 to-purple-600 relative">
+            <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-cyan-400 via-blue-500 to-purple-600 relative">
               I
-              <div className="absolute inset-0 text-5xl font-black text-cyan-400 opacity-50 blur-sm animate-pulse">
+              <div className="absolute inset-0 text-3xl font-black text-cyan-400 opacity-50 blur-sm animate-pulse">
                 I
               </div>
             </div>
           </div>
 
-          {/* Dot */}
+          
           <div
             className={`absolute -top-2 left-1/2 transform -translate-x-1/2 transition-all duration-500 ${
               animationStage >= 3 ? "scale-100 opacity-100" : "scale-0 opacity-0"
@@ -93,7 +92,7 @@ const AnimatedIVLogo: React.FC = () => {
           </div>
         </div>
 
-        {/* Letter V */}
+      
         <div className="relative">
           <div
             className={`transform transition-all duration-1000 ease-out ${
@@ -102,15 +101,15 @@ const AnimatedIVLogo: React.FC = () => {
                 : "scale-100 opacity-100 rotate-0"
             }`}
           >
-            <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-purple-600 via-pink-500 to-red-500 relative">
+            <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-purple-600 via-pink-500 to-red-500 relative">
               V
-              <div className="absolute inset-0 text-6xl font-black text-pink-500 opacity-50 blur-sm animate-pulse">
+              <div className="absolute inset-0 text-3xl font-black text-pink-500 opacity-50 blur-sm animate-pulse">
                 V
               </div>
             </div>
           </div>
 
-          {/* Orbs */}
+         
           <div className={`absolute inset-0 ${animationStage >= 4 ? "opacity-100" : "opacity-0"}`}>
             <div className="absolute inset-0 animate-spin">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-pink-500 rounded-full shadow-lg shadow-pink-500/50" />
@@ -124,13 +123,12 @@ const AnimatedIVLogo: React.FC = () => {
           </div>
         </div>
 
-        {/* Final glow */}
+       
         <div className={`absolute inset-0 transition-all duration-1000 ${isComplete ? "opacity-100" : "opacity-0"}`}>
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 blur-2xl animate-pulse" />
         </div>
       </div> 
 
-      {/* Custom CSS for animations */}
       <style jsx>{`
         @keyframes twinkle {
           0%, 100% {
