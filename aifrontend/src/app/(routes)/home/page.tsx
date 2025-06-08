@@ -10,7 +10,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { GradientBackground } from "../../../components/gradient-background"
-import "taos/dist/taos.css";
+import { useScrollTransform } from "../../../components/image";
 
 
 export default function Home() {
@@ -36,23 +36,25 @@ export default function Home() {
 
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const [scrolled, setScrolled] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 30);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [])
+   const [leftRef1, leftStyle1] = useScrollTransform({
+    fromX: -100, toX: 0, fromRot: -15, toRot: 0
+  });
 
-   useEffect(() => {
-    require("taos");
-  }, []);
+  const [leftRef2, leftStyle2] = useScrollTransform({
+    fromX: -120, toX: 0, fromRot: -18, toRot: 0
+  });
 
+  const [rightRef, rightStyle] = useScrollTransform({
+    fromX: 100, toX: 0, fromRot: 15, toRot: 0
+  });
+
+  const [rightRef2, rightStyle2] = useScrollTransform({
+    fromX: 120, toX: 0, fromRot: 18, toRot: 0
+  });
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col  overflow-x-hidden">
       <GradientBackground />
       <nav className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 flex justify-center items-center w-[60%] lg:w-1/2 rounded-full
     bg-transparent md:border-b md:border-white/20 shadow-md  backdrop-blur-md mb-30">
@@ -158,59 +160,127 @@ export default function Home() {
             </div>
           </div>
         </section>
-        <section
-          id="feature"
-          className="flex flex-col justify-center items-center min-h-screen w-full mx-auto space-y-10"
-        >
-          <div className="flex flex-row justify-center items-center space-x-20 w-full max-w-5xl mx-auto">
-            <div className="w-1/3 "data-taos="fade-right" >
-              <Image src="/ai.webp" alt="AI illustration" width={1000} height={800} />
+       <section id="features" className="py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
+          <div className="max-w-7xl mx-auto space-y-32 overflow-hidden">
+            
+            {/* Feature 1 */}
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-20 overflow-hidden">
+              <div
+                ref={leftRef1}
+                style={leftStyle1}
+                className="w-full lg:w-1/2 transition-all duration-700 ease-out max-w-full"
+              >
+                <div className="relative group max-w-full">
+                  <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+                  <Image 
+                    src="/ai.webp" 
+                    alt="AI illustration" 
+                    width={600} 
+                    height={450} 
+                    className="relative rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500 max-w-full h-auto"
+                  />
+                </div>
+              </div>
+              <div className="w-full lg:w-1/2 text-center lg:text-left">
+                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+                  Real-Time AI Analysis
+                </h2>
+                <p className="text-xl sm:text-2xl text-gray-300 leading-relaxed">
+                  Harness the power of advanced AI to analyze social media trends in real-time. Our intelligent system 
+                  processes millions of data points to give you actionable insights that drive engagement and growth.
+                </p>
+              </div>
             </div>
-            <div className="w-1/3">
-              <h1 className="font-bold text-5xl">Real-Time Practice with AI</h1>
-              <p className="text-2xl m-2">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut, delectus sit sunt quam iste eveniet deleniti doloribus voluptatum fugiat, ex necessitatibus voluptate eius tempora! Laudantium eaque consequuntur maiores unde rerum..
-              </p>
-            </div>
-          </div>
 
-          <div className="flex flex-row justify-center items-center space-x-20 w-full max-w-5xl mx-auto">
-            <div className="w-1/3">
-              <h1 className="font-bold text-5xl">Real-Time Practice with AI</h1>
-              <p className="text-2xl">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut, delectus sit sunt quam iste eveniet deleniti doloribus voluptatum fugiat, ex necessitatibus voluptate eius tempora! Laudantium eaque consequuntur maiores unde rerum..
-              </p>
+            {/* Feature 2 */}
+            <div className="flex flex-col lg:flex-row-reverse items-center justify-between gap-16 lg:gap-20 overflow-hidden">
+              <div
+                ref={rightRef}
+                style={rightStyle}
+                className="w-full lg:w-1/2 transition-all duration-700 ease-out max-w-full"
+              >
+                <div className="relative group max-w-full">
+                  <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 to-pink-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+                  <Image 
+                    src="/ai.webp" 
+                    alt="AI illustration" 
+                    width={600} 
+                    height={450} 
+                    className="relative rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500 max-w-full h-auto"
+                  />
+                </div>
+              </div>
+              <div className="w-full lg:w-1/2 text-center lg:text-left">
+                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+                  Smart Content Optimization
+                </h2>
+                <p className="text-xl sm:text-2xl text-gray-300 leading-relaxed">
+                  Transform your content strategy with AI-powered optimization. Our platform adapts your messaging 
+                  for each social media platform, ensuring maximum reach and engagement across all channels.
+                </p>
+              </div>
             </div>
-            <div className="w-1/3" data-taos="fade-left">
-              <Image src="/ai.webp" alt="AI illustration" width={1000} height={800} />
-            </div>
-          </div>
 
-          <div className="flex flex-row justify-center items-center space-x-20 w-full max-w-5xl mx-auto">
-            <div className="w-1/3">
-              <Image src="/ai.webp" alt="AI illustration" width={1000} height={800} />
+            {/* Feature 3 */}
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-20 overflow-hidden">
+              <div
+                ref={leftRef2}
+                style={leftStyle2}
+                className="w-full lg:w-1/2 transition-all duration-700 ease-out max-w-full"
+              >
+                <div className="relative group max-w-full">
+                  <div className="absolute -inset-4 bg-gradient-to-r from-green-500/20 to-blue-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+                  <Image 
+                    src="/ai.webp" 
+                    alt="AI illustration" 
+                    width={600} 
+                    height={450} 
+                    className="relative rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500 max-w-full h-auto"
+                  />
+                </div>
+              </div>
+              <div className="w-full lg:w-1/2 text-center lg:text-left">
+                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-600">
+                  Predictive Trend Analysis
+                </h2>
+                <p className="text-xl sm:text-2xl text-gray-300 leading-relaxed">
+                  Stay ahead of the curve with our predictive analytics. Identify emerging trends before they go viral 
+                  and position your brand at the forefront of social media conversations.
+                </p>
+              </div>
             </div>
-            <div className="w-1/3">
-              <h1 className="font-bold text-5xl">Real-Time Practice with AI</h1>
-              <p className="text-2xl m-2">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut, delectus sit sunt quam iste eveniet deleniti doloribus voluptatum fugiat, ex necessitatibus voluptate eius tempora! Laudantium eaque consequuntur maiores unde rerum..
-              </p>
+
+            {/* Feature 4 */}
+            <div className="flex flex-col lg:flex-row-reverse items-center justify-between gap-16 lg:gap-20 overflow-hidden">
+              <div
+                ref={rightRef2}
+                style={rightStyle2}
+                className="w-full lg:w-1/2 transition-all duration-700 ease-out max-w-full"
+              >
+                <div className="relative group max-w-full">
+                  <div className="absolute -inset-4 bg-gradient-to-r from-orange-500/20 to-red-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+                  <Image 
+                    src="/ai.webp" 
+                    alt="AI illustration" 
+                    width={600} 
+                    height={450} 
+                    className="relative rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500 max-w-full h-auto"
+                  />
+                </div>
+              </div>
+              <div className="w-full lg:w-1/2 text-center lg:text-left">
+                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600">
+                  Advanced Analytics Dashboard
+                </h2>
+                <p className="text-xl sm:text-2xl text-gray-300 leading-relaxed">
+                  Get comprehensive insights with our intuitive dashboard. Track performance metrics, audience sentiment, 
+                  and engagement patterns with beautiful visualizations and actionable recommendations.
+                </p>
+              </div>
             </div>
-          </div>
-          
-          <div className="flex flex-row justify-center items-center space-x-20 w-full max-w-5xl mx-auto">
-            <div className="w-1/3">
-              <h1 className="font-bold text-5xl">Real-Time Practice with AI</h1>
-              <p className="text-2xl">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut, delectus sit sunt quam iste eveniet deleniti doloribus voluptatum fugiat, ex necessitatibus voluptate eius tempora! Laudantium eaque consequuntur maiores unde rerum..
-              </p>
-            </div>
-            <div className="w-1/3">
-              <Image src="/ai.webp" alt="AI illustration" width={1000} height={800} />
-            </div>
+
           </div>
         </section>
-
 
       </main>
 
