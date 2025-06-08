@@ -1,12 +1,6 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
-  content: [
-    './pages/**/*.{ts,tsx,js,jsx}',
-    './components/**/*.{ts,tsx,js,jsx}',
-    './app/**/*.{ts,tsx,js,jsx}',
-    './src/**/*.{ts,tsx,js,jsx}',
-  ],
   theme: {
     container: {
       center: true,
@@ -75,6 +69,24 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
-} satisfies Config
-export default config;
+  safelist: [
+    '!duration-[0ms]',
+    '!delay-[0ms]',
+    'html.js :where([class*="taos:"]:not(.taos-init))'
+  ],
+  },
+  content: {
+    relative: true,
+    transform: (content) => content.replace(/taos:/g, ''),
+    files: [
+      './pages/**/*.{ts,tsx,js,jsx}',
+      './components/**/*.{ts,tsx,js,jsx}',
+      './app/**/*.{ts,tsx,js,jsx}',
+      './src/**/*.{ts,tsx,js,jsx}',
+    ],
+  },
+  safelist: [
+    '!duration-[0ms]',
+    '!delay-[0ms]',
+    'html.js :where([class*="taos:"]:not(.taos-init))'
+  ],

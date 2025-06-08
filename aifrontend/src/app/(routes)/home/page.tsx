@@ -3,20 +3,21 @@
 
 import Logo from "../../../lib/logo/page"
 import { useRef, useState, useEffect } from "react";
-import { WavyBackground } from "../../../components/wavyBackground/wave";
 import { Menu, PanelRightClose } from "lucide-react";
 import { SoundWaveAnimation } from "../../../components/soud-wave-animattion"
 import { Button } from "../../../components/button"
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { GradientBackground } from "../../../components/gradient-background"
+import "taos/dist/taos.css";
 
 
 export default function Home() {
 
   const [size, setSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLElement>(null);
- 
+
   useEffect(() => {
     function updateSize() {
       if (containerRef.current) {
@@ -37,35 +38,39 @@ export default function Home() {
 
   const [scrolled, setScrolled] = useState(false);
 
-useEffect(() => {
-  const handleScroll = () => {
-    setScrolled(window.scrollY > 30); 
-  };
-  window.addEventListener("scroll", handleScroll);
-  return () => window.removeEventListener("scroll", handleScroll);
-}, [])
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 30);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [])
+
+   useEffect(() => {
+    require("taos");
+  }, []);
 
 
   return (
     <div className="flex min-h-screen flex-col">
       <GradientBackground />
-   <nav className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 flex justify-center items-center w-[60%] lg:w-1/2 rounded-full
+      <nav className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 flex justify-center items-center w-[60%] lg:w-1/2 rounded-full
     bg-transparent md:border-b md:border-white/20 shadow-md  backdrop-blur-md mb-30">
         <div className="container mx-auto px-4 py-4 ">
           <div className="flex flex-row  justify-between items-center">
             <div className="flex items-center justify-between w-full space-x-4">
-            <div><Logo /> </div>
-            <button
-              className="md:hidden ml-auto text-2xl"
-              onClick={() => setMenuOpen((prev) => !prev)}
-              aria-label="Toggle navigation menu"
-            >
-              {menuOpen ? (
-                <PanelRightClose size={32} />
-              ) : (
-                <Menu size={32} />
-              )}
-            </button>
+              <div><Logo /> </div>
+              <button
+                className="md:hidden ml-auto text-2xl"
+                onClick={() => setMenuOpen((prev) => !prev)}
+                aria-label="Toggle navigation menu"
+              >
+                {menuOpen ? (
+                  <PanelRightClose size={32} />
+                ) : (
+                  <Menu size={32} />
+                )}
+              </button>
             </div>
             <ul className="hidden md:flex flex-row space-x-8 ml-8 text-2xl font-semibold">
               <li className="transition-all duration-300 hover:rounded-full px-2 py-2">
@@ -87,46 +92,45 @@ useEffect(() => {
             </ul>
           </div>
 
-          
-    {menuOpen && (
-  <div className="md:hidden ">
-    <ul className="flex flex-col space-y-2 z-50 bg-transparent py-4 font-semibold">
-      <li className="hover:bg-gray-600 px-2 py-1 rounded">
-        <a
-          href="/about"
-          className="px-4 py-2 w-fit inline-block"
-          onClick={() => setMenuOpen(false)}
-        >
-          About
-        </a>
-      </li>
-      <li className="hover:bg-gray-600 px-2 py-1 rounded">
-        <a
-          href="/contact"
-          className="px-4 py-2 w-fit inline-block"
-          onClick={() => setMenuOpen(false)}
-        >
-          Contact
-        </a>
-      </li>
-      <li className="hover:bg-gray-600 px-2 py-1 rounded">
-        <a
-          href="/services"
-          className="px-4 py-2 w-fit inline-block"
-          onClick={() => setMenuOpen(false)}
-        >
-          Services
-        </a>
-      </li>
-    </ul>
-  </div>
-)}
 
+          {menuOpen && (
+            <div className="md:hidden ">
+              <ul className="flex flex-col space-y-2 z-50 bg-transparent py-4 font-semibold">
+                <li className="hover:bg-gray-600 px-2 py-1 rounded">
+                  <a
+                    href="/about"
+                    className="px-4 py-2 w-fit inline-block"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    About
+                  </a>
+                </li>
+                <li className="hover:bg-gray-600 px-2 py-1 rounded">
+                  <a
+                    href="/contact"
+                    className="px-4 py-2 w-fit inline-block"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Contact
+                  </a>
+                </li>
+                <li className="hover:bg-gray-600 px-2 py-1 rounded">
+                  <a
+                    href="/services"
+                    className="px-4 py-2 w-fit inline-block"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Services
+                  </a>
+                </li>
+              </ul>
+            </div>
+          )}
 
         </div>
       </nav>
-    
-      <main className="flex-1 sm:mt-30 mt-40">
+
+      <main className="flex-1 sm:mt-30 mt-40 ">
         <section className="flex justify-center items-center space-y-6 pb-8 pt-6 md:pb-12 md:pt-10 lg:py-32 overflow-hidden">
           <SoundWaveAnimation className="top-1/2 -translate-y-1/2" />
           <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center relative z-10">
@@ -154,20 +158,70 @@ useEffect(() => {
             </div>
           </div>
         </section>
-      <section id="#about">
+        <section
+          id="feature"
+          className="flex flex-col justify-center items-center min-h-screen w-full mx-auto space-y-10"
+        >
+          <div className="flex flex-row justify-center items-center space-x-20 w-full max-w-5xl mx-auto">
+            <div className="w-1/3 "data-taos="fade-right" >
+              <Image src="/ai.webp" alt="AI illustration" width={1000} height={800} />
+            </div>
+            <div className="w-1/3">
+              <h1 className="font-bold text-5xl">Real-Time Practice with AI</h1>
+              <p className="text-2xl m-2">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut, delectus sit sunt quam iste eveniet deleniti doloribus voluptatum fugiat, ex necessitatibus voluptate eius tempora! Laudantium eaque consequuntur maiores unde rerum..
+              </p>
+            </div>
+          </div>
 
-      </section>
-     
+          <div className="flex flex-row justify-center items-center space-x-20 w-full max-w-5xl mx-auto">
+            <div className="w-1/3">
+              <h1 className="font-bold text-5xl">Real-Time Practice with AI</h1>
+              <p className="text-2xl">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut, delectus sit sunt quam iste eveniet deleniti doloribus voluptatum fugiat, ex necessitatibus voluptate eius tempora! Laudantium eaque consequuntur maiores unde rerum..
+              </p>
+            </div>
+            <div className="w-1/3" data-taos="fade-left">
+              <Image src="/ai.webp" alt="AI illustration" width={1000} height={800} />
+            </div>
+          </div>
+
+          <div className="flex flex-row justify-center items-center space-x-20 w-full max-w-5xl mx-auto">
+            <div className="w-1/3">
+              <Image src="/ai.webp" alt="AI illustration" width={1000} height={800} />
+            </div>
+            <div className="w-1/3">
+              <h1 className="font-bold text-5xl">Real-Time Practice with AI</h1>
+              <p className="text-2xl m-2">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut, delectus sit sunt quam iste eveniet deleniti doloribus voluptatum fugiat, ex necessitatibus voluptate eius tempora! Laudantium eaque consequuntur maiores unde rerum..
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex flex-row justify-center items-center space-x-20 w-full max-w-5xl mx-auto">
+            <div className="w-1/3">
+              <h1 className="font-bold text-5xl">Real-Time Practice with AI</h1>
+              <p className="text-2xl">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut, delectus sit sunt quam iste eveniet deleniti doloribus voluptatum fugiat, ex necessitatibus voluptate eius tempora! Laudantium eaque consequuntur maiores unde rerum..
+              </p>
+            </div>
+            <div className="w-1/3">
+              <Image src="/ai.webp" alt="AI illustration" width={1000} height={800} />
+            </div>
+          </div>
+        </section>
+
+
       </main>
-    
+
     </div>
   )
 }
 
 
 
-  {/* Hero Section */}
-      {/* <section className="relative py-16 overflow-hidden">
+{/* Hero Section */ }
+{/* <section className="relative py-16 overflow-hidden">
 
         <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
           <FlickeringGrid
@@ -209,4 +263,3 @@ useEffect(() => {
 
         </div>
       </section> */}
-      
