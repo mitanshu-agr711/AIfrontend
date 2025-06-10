@@ -1,17 +1,15 @@
 
 "use client"
 
-import Logo from "../../../lib/logo/page"
 import { useRef, useState, useEffect } from "react";
-import { Menu, PanelRightClose } from "lucide-react";
-import { SoundWaveAnimation } from "../../../components/soud-wave-animattion"
-import { Button } from "../../../components/button"
+import { SoundWaveAnimation } from "@/components/soud-wave-animattion"
+import { Button } from "@/components/button"
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
-import { GradientBackground } from "../../../components/gradient-background"
-import { useScrollTransform } from "../../../components/image";
-
+import { GradientBackground } from "@/components/gradient-background"
+import { useScrollTransform } from "@/components/image";
+import { Navbar } from "@/components/navbar";
 
 export default function Home() {
 
@@ -34,7 +32,6 @@ export default function Home() {
 
 
 
-  const [menuOpen, setMenuOpen] = useState(false);
 
 
    const [leftRef1, leftStyle1] = useScrollTransform({
@@ -56,81 +53,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col  overflow-x-hidden">
       <GradientBackground />
-      <nav className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 flex justify-center items-center w-[60%] lg:w-1/2 rounded-full
-    bg-transparent md:border-b md:border-white/20 shadow-md  backdrop-blur-md mb-30">
-        <div className="container mx-auto px-4 py-4 ">
-          <div className="flex flex-row  justify-between items-center">
-            <div className="flex items-center justify-between w-full space-x-4">
-              <div><Logo /> </div>
-              <button
-                className="md:hidden ml-auto text-2xl"
-                onClick={() => setMenuOpen((prev) => !prev)}
-                aria-label="Toggle navigation menu"
-              >
-                {menuOpen ? (
-                  <PanelRightClose size={32} />
-                ) : (
-                  <Menu size={32} />
-                )}
-              </button>
-            </div>
-            <ul className="hidden md:flex flex-row space-x-8 ml-8 text-2xl font-semibold">
-              <li className="transition-all duration-300 hover:rounded-full px-2 py-2">
-                <a href="/about" className="block font-semibold ">
-                  About
-                </a>
-              </li>
-
-              <li className="transition-all duration-300 hover:rounded-full px-2 py-2">
-                <a href="/contact" className="font-semibold">
-                  Contact
-                </a>
-              </li>
-              <li className="transition-all duration-300 hover:rounded-full px-2 py-2">
-                <a href="/services" className="font-semibold">
-                  Services
-                </a>
-              </li>
-            </ul>
-          </div>
-
-
-          {menuOpen && (
-            <div className="md:hidden ">
-              <ul className="flex flex-col space-y-2 z-50 bg-transparent py-4 font-semibold">
-                <li className="hover:bg-gray-600 px-2 py-1 rounded">
-                  <a
-                    href="/about"
-                    className="px-4 py-2 w-fit inline-block"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    About
-                  </a>
-                </li>
-                <li className="hover:bg-gray-600 px-2 py-1 rounded">
-                  <a
-                    href="/contact"
-                    className="px-4 py-2 w-fit inline-block"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Contact
-                  </a>
-                </li>
-                <li className="hover:bg-gray-600 px-2 py-1 rounded">
-                  <a
-                    href="/services"
-                    className="px-4 py-2 w-fit inline-block"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Services
-                  </a>
-                </li>
-              </ul>
-            </div>
-          )}
-
-        </div>
-      </nav>
+      <Navbar />
 
       <main className="flex-1 sm:mt-30 mt-40 ">
         <section className="flex justify-center items-center space-y-6 pb-8 pt-6 md:pb-12 md:pt-10 lg:py-32 overflow-hidden">
@@ -162,8 +85,8 @@ export default function Home() {
         </section>
        <section id="features" className="py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
           <div className="max-w-7xl mx-auto space-y-32 overflow-hidden">
-            
-            {/* Feature 1 */}
+            <h1 className="font-bold text-[4rem] sm:text-[5rem] lg:text-[10rem] text-transparent  bg-clip-text bg-gradient-to-r from-blue-700 via-white to-blue-500">Features</h1>
+          
             <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-20 overflow-hidden">
               <div
                 ref={leftRef1}
@@ -185,14 +108,14 @@ export default function Home() {
                 <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
                   Real-Time AI Analysis
                 </h2>
-                <p className="text-xl sm:text-2xl text-gray-300 leading-relaxed">
+                <p className="text-xl sm:text-2xl text-gray-400 leading-relaxed">
                   Harness the power of advanced AI to analyze social media trends in real-time. Our intelligent system 
                   processes millions of data points to give you actionable insights that drive engagement and growth.
                 </p>
               </div>
             </div>
 
-            {/* Feature 2 */}
+           
             <div className="flex flex-col lg:flex-row-reverse items-center justify-between gap-16 lg:gap-20 overflow-hidden">
               <div
                 ref={rightRef}
@@ -211,17 +134,17 @@ export default function Home() {
                 </div>
               </div>
               <div className="w-full lg:w-1/2 text-center lg:text-left">
-                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
                   Smart Content Optimization
                 </h2>
-                <p className="text-xl sm:text-2xl text-gray-300 leading-relaxed">
+                <p className="text-xl sm:text-2xl text-gray-400 leading-relaxed">
                   Transform your content strategy with AI-powered optimization. Our platform adapts your messaging 
                   for each social media platform, ensuring maximum reach and engagement across all channels.
                 </p>
               </div>
             </div>
 
-            {/* Feature 3 */}
+          
             <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-20 overflow-hidden">
               <div
                 ref={leftRef2}
@@ -240,17 +163,17 @@ export default function Home() {
                 </div>
               </div>
               <div className="w-full lg:w-1/2 text-center lg:text-left">
-                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-600">
+                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
                   Predictive Trend Analysis
                 </h2>
-                <p className="text-xl sm:text-2xl text-gray-300 leading-relaxed">
+                <p className="text-xl sm:text-2xl text-gray-400 leading-relaxed">
                   Stay ahead of the curve with our predictive analytics. Identify emerging trends before they go viral 
                   and position your brand at the forefront of social media conversations.
                 </p>
               </div>
             </div>
 
-            {/* Feature 4 */}
+        
             <div className="flex flex-col lg:flex-row-reverse items-center justify-between gap-16 lg:gap-20 overflow-hidden">
               <div
                 ref={rightRef2}
@@ -269,10 +192,10 @@ export default function Home() {
                 </div>
               </div>
               <div className="w-full lg:w-1/2 text-center lg:text-left">
-                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600">
+                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r  from-blue-400 to-purple-600">
                   Advanced Analytics Dashboard
                 </h2>
-                <p className="text-xl sm:text-2xl text-gray-300 leading-relaxed">
+                <p className="text-xl sm:text-2xl text-gray-400 leading-relaxed">
                   Get comprehensive insights with our intuitive dashboard. Track performance metrics, audience sentiment, 
                   and engagement patterns with beautiful visualizations and actionable recommendations.
                 </p>

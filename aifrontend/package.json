@@ -12,6 +12,7 @@
     "@chakra-ui/react": "^3.19.1",
     "@emotion/react": "^11.14.0",
     "@radix-ui/react-slot": "^1.2.3",
+    "@reduxjs/toolkit": "^2.8.2",
     "@saas-ui/react": "^3.0.0-next.35",
     "@tabler/icons-react": "^3.33.0",
     "class-variance-authority": "^0.7.1",
@@ -23,6 +24,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-player": "^2.16.0",
+    "react-redux": "^9.2.0",
     "simplex-noise": "^4.0.3",
     "tailwind-merge": "^3.3.0",
     "taos": "^1.0.5"
