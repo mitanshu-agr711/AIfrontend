@@ -1,54 +1,32 @@
-
-
 export const fakeQAData = [
   {
     id: 1,
-    question: "What is the primary purpose of a REST API?",
-    answer: "To allow communication between client and server using HTTP methods."
+    question: "What is useEffect in React?",
+    userAnswer: "It is used for calling APIs.",
+    botAnswer: "Correct! useEffect is used to perform side effects like API calls, subscriptions, or manually changing the DOM after render."
   },
   {
     id: 2,
-    question: "How does the virtual DOM improve performance in React?",
-    answer: "It minimizes direct DOM manipulation by updating only the changed elements."
+    question: "What is the difference between getStaticProps and getServerSideProps in Next.js?",
+    userAnswer: "getStaticProps is used for static and getServerSideProps for dynamic.",
+    botAnswer: "You're partially right. getStaticProps is used to fetch data at build time, ideal for static pages. getServerSideProps runs on every request, suitable for dynamic pages with frequently changing data."
   },
   {
     id: 3,
-    question: "What is the difference between `let`, `const`, and `var` in JavaScript?",
-    answer: "`let` and `const` are block-scoped, while `var` is function-scoped. `const` cannot be reassigned."
+    question: "What is a closure in JavaScript?",
+    userAnswer: "When a function returns another function.",
+    botAnswer: "Close! A closure is when a function retains access to its lexical scope (variables) even after the outer function has finished executing."
   },
   {
     id: 4,
-    question: "Explain what a closure is in JavaScript.",
-    answer: "A closure is a function that retains access to its lexical scope even after the outer function has returned."
+    question: "Explain REST API in simple terms.",
+    userAnswer: "It is used to send data using HTTP.",
+    botAnswer: "Yes, and to add: REST is an architectural style where APIs use HTTP methods (GET, POST, PUT, DELETE) to interact with resources identified by URLs."
   },
   {
     id: 5,
-    question: "What is SSR in Next.js?",
-    answer: "SSR stands for Server-Side Rendering, where HTML is generated on each request on the server."
-  },
-  {
-    id: 6,
-    question: "What is the use of `useEffect` in React?",
-    answer: "`useEffect` is used to run side effects like data fetching or subscriptions in functional components."
-  },
-  {
-    id: 7,
-    question: "What is hydration in Next.js?",
-    answer: "Hydration is the process of attaching event listeners to server-rendered HTML on the client side."
-  },
-  {
-    id: 8,
-    question: "How can you improve performance in a Next.js application?",
-    answer: "By using dynamic imports, image optimization, caching strategies, and SSR or static generation as needed."
-  },
-  {
-    id: 9,
-    question: "What is the difference between `getServerSideProps` and `getStaticProps`?",
-    answer: "`getServerSideProps` runs on every request, while `getStaticProps` runs at build time."
-  },
-  {
-    id: 10,
     question: "What is Zustand?",
-    answer: "Zustand is a small, fast state-management library for React apps."
+    userAnswer: "A state manager for React.",
+    botAnswer: "Exactly. Zustand is a small, fast, and scalable state-management solution that works with React without the need for reducers or context."
   }
 ];
