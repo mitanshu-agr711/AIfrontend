@@ -4,11 +4,13 @@ import Image from "next/image";
 
 export const Chat = () => {
     return (
-        <div className="overflow-y-auto h-[80vh] p-4">
+        <div className="overflow-y-auto h-[90vh] p-4">
+            <h1 className=" flex justify-center items-center font-semibold text-[3rem] mt-5
+                                 text-transparent  bg-clip-text bg-gradient-to-r from-blue-200 via-slate-600 to-blue-300">Chat</h1>
             {fakeQAData.map((item) => (
                 <div key={item.id} className="mb-4 p-2">
-                    <h2 className="font-bold flex space-x-1 shadow rounded-3xl p-4 m-2">
-                        <div>{item.id}</div>
+                    <h2 className="font-bold flex space-x-1 shadow rounded-3xl p-4 m-2 text-lg">
+                        <div>{item.id}.</div>
                         <div className="text-lg">{item.question}</div>
                     </h2>
                     <div className=" space-y-2 p-4  rounded-lg">
