@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export const Chat = () => {
     return (
-        <div className="overflow-y-auto h-[90vh] p-4">
+        <div className="overflow-y-auto max-h-screen p-4">
             <h1 className=" flex justify-center items-center font-semibold text-[3rem] mt-5
                                  text-transparent  bg-clip-text bg-gradient-to-r from-blue-200 via-slate-600 to-blue-300">Chat</h1>
             {fakeQAData.map((item) => (
