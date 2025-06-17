@@ -1,5 +1,5 @@
 'use client';
-import { fakeQAData } from "@/lib/fakedata";
+import { fakeQAData } from "@/Api/fakedata";
 import Image from "next/image";
 
 export const Chat = () => {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Menu, PanelRightClose } from "lucide-react";
-import Logo from "@/lib/logo/page"
+import Logo from "@/components/lib/logo/page"
 
 
 

@@ -7,7 +7,7 @@ import {
 //   useVelocity,
   useSpring,
 } from "motion/react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/components/slider/lib/utils";
 
 export const TracingBeam = ({
   children,
