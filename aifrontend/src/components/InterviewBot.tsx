@@ -37,7 +37,7 @@ const InterviewBot = ({ isListening, isSpeaking, className }: InterviewBotProps)
           }}
         />
         <Image
-        //  src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=400&fit=crop&crop=center"
+         src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=400&fit=crop&crop=center"
           alt="Interview Bot"
           width={200}
           height={200}
