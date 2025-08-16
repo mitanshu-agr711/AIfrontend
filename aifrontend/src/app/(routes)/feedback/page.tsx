@@ -1,6 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
 import "chart.js/auto";
+import Slider from "@/components/slider/page";
 
 const Line = dynamic(() => import("react-chartjs-2").then((mod) => mod.Line), {
   ssr: false,
@@ -21,7 +22,12 @@ const data = {
 
 const LineChart = () => {
   return (
+  
     <div className="flex  min-h-screen bg-gray-50 w-full  ">
+      <div className="w-[15%] m-4">
+           <Slider />
+           </div>
+   
       <div className="w-200 h-80 p-2 bg-white rounded-2xl shadow-md flex flex-col r">
         <h1 className="text-lg font-semibold mb-2 text-gray-800">
           Example 1: Line Chart
