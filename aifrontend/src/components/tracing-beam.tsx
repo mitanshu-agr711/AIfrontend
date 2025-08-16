@@ -7,7 +7,7 @@ import {
 //   useVelocity,
   useSpring,
 } from "motion/react";
-import { cn } from "@/components/slider/lib/utils";
+// import { cn } from "@/components/slider/lib/utils";
 
 export const TracingBeam = ({
   children,
@@ -109,8 +109,8 @@ export const TracingBeam = ({
               gradientUnits="userSpaceOnUse"
               x1="0"
               x2="0"
-              y1={y1} // set y1 for gradient
-              y2={y2} // set y2 for gradient
+              y1={y1} 
+              y2={y2}
             >
               <stop stopColor="#18CCFC" stopOpacity="0"></stop>
               <stop stopColor="#18CCFC"></stop>
