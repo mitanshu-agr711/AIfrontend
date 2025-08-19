@@ -73,12 +73,12 @@ export default function Home() {
             </p>
             <div className="flex flex-wrap justify-center gap-4 mt-6">
               <Button size="lg" className="bg-blue-500 hover:bg-blue-600" asChild>
-                <Link href="#demo">
-                  Try Interactive Demo <ArrowRight className="ml-2 h-4 w-4" />
+                <Link href="/workspace">
+                  Start Interview <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" className="glass-button" asChild>
-                <Link href="#features">Learn More</Link>
+                <Link href="/feedback">View Your Progress</Link>
               </Button>
             </div>
           </div>

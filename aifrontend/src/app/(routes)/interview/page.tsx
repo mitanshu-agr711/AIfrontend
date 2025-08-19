@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import InterviewBot from '@/components/InterviewBot'
 import { Button } from '@/components/button'
 import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react'
 
 const InterviewPage = () => {
+    const router = useRouter()
     const [showBlur, setShowBlur] = useState(true)
     const [timer, setTimer] = useState(600)
     const [timerActive, setTimerActive] = useState(false)
@@ -71,8 +73,7 @@ const InterviewPage = () => {
     }
 
     const endInterview = () => {
-        
-        console.log('Interview ended')
+        router.push('/interview-complete')
     }
 
     return (
@@ -170,10 +171,10 @@ const InterviewPage = () => {
                           
                             <div className="space-y-4">
                                 <div className="bg-white/10 rounded-lg p-3">
-                                    <p className="text-sm text-white/80">Bot: Hello! I'm ready to start your interview.</p>
+                                    <p className="text-sm text-white/80">Bot: Hello! I&apos;m ready to start your interview.</p>
                                 </div>
                                 <div className="bg-blue-500/20 rounded-lg p-3 ml-8">
-                                    <p className="text-sm text-white/80">You: Hi, I'm ready too.</p>
+                                    <p className="text-sm text-white/80">You: Hi, I&apos;m ready too.</p>
                                 </div>
                             </div>
                         </div>

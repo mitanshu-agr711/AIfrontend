@@ -1,4 +1,178 @@
-export const points=[
+// Interview performance data for feedback visualization
+export const interviewPerformanceData = [
+  {
+    id: 1,
+    interviewDate: "2025-01-15",
+    companyName: "Google",
+    position: "Software Engineer",
+    overallScore: 85,
+    technicalScore: 88,
+    communicationScore: 82,
+    problemSolvingScore: 87,
+    codingScore: 90,
+    interviewDuration: 45, // in minutes
+    questionsAsked: 8,
+    questionsAnswered: 7,
+    difficulty: "Medium",
+    feedback: "Strong technical knowledge, good problem-solving approach. Could improve on explaining thought process.",
+  },
+  {
+    id: 2,
+    interviewDate: "2025-02-20",
+    companyName: "Microsoft",
+    position: "Full Stack Developer",
+    overallScore: 78,
+    technicalScore: 80,
+    communicationScore: 75,
+    problemSolvingScore: 82,
+    codingScore: 76,
+    interviewDuration: 50,
+    questionsAsked: 10,
+    questionsAnswered: 8,
+    difficulty: "Hard",
+    feedback: "Good coding skills, but needs to work on communication during problem solving.",
+  },
+  {
+    id: 3,
+    interviewDate: "2025-03-10",
+    companyName: "Amazon",
+    position: "Backend Developer",
+    overallScore: 92,
+    technicalScore: 95,
+    communicationScore: 88,
+    problemSolvingScore: 94,
+    codingScore: 93,
+    interviewDuration: 40,
+    questionsAsked: 6,
+    questionsAnswered: 6,
+    difficulty: "Medium",
+    feedback: "Excellent performance across all areas. Clear communication and strong technical skills.",
+  },
+  {
+    id: 4,
+    interviewDate: "2025-04-05",
+    companyName: "Apple",
+    position: "iOS Developer",
+    overallScore: 71,
+    technicalScore: 68,
+    communicationScore: 74,
+    problemSolvingScore: 70,
+    codingScore: 72,
+    interviewDuration: 55,
+    questionsAsked: 9,
+    questionsAnswered: 6,
+    difficulty: "Hard",
+    feedback: "Showed good effort but struggled with advanced concepts. Recommend more practice with system design.",
+  },
+  {
+    id: 5,
+    interviewDate: "2025-05-12",
+    companyName: "Meta",
+    position: "Frontend Developer",
+    overallScore: 89,
+    technicalScore: 91,
+    communicationScore: 86,
+    problemSolvingScore: 90,
+    codingScore: 88,
+    interviewDuration: 42,
+    questionsAsked: 7,
+    questionsAnswered: 7,
+    difficulty: "Medium",
+    feedback: "Great technical understanding and excellent problem-solving skills. Well-structured answers.",
+  },
+  {
+    id: 6,
+    interviewDate: "2025-06-18",
+    companyName: "Netflix",
+    position: "Data Engineer",
+    overallScore: 83,
+    technicalScore: 85,
+    communicationScore: 80,
+    problemSolvingScore: 84,
+    codingScore: 83,
+    interviewDuration: 48,
+    questionsAsked: 8,
+    questionsAnswered: 7,
+    difficulty: "Medium",
+    feedback: "Solid performance with good data structure knowledge. Could improve on algorithm optimization.",
+  },
+  {
+    id: 7,
+    interviewDate: "2025-07-25",
+    companyName: "Tesla",
+    position: "Software Engineer",
+    overallScore: 95,
+    technicalScore: 97,
+    communicationScore: 92,
+    problemSolvingScore: 96,
+    codingScore: 94,
+    interviewDuration: 38,
+    questionsAsked: 5,
+    questionsAnswered: 5,
+    difficulty: "Hard",
+    feedback: "Outstanding performance! Excellent technical skills and clear communication. Ready for senior roles.",
+  },
+  {
+    id: 8,
+    interviewDate: "2025-08-15",
+    companyName: "Spotify",
+    position: "Full Stack Developer",
+    overallScore: 76,
+    technicalScore: 79,
+    communicationScore: 73,
+    problemSolvingScore: 78,
+    codingScore: 75,
+    interviewDuration: 52,
+    questionsAsked: 9,
+    questionsAnswered: 7,
+    difficulty: "Medium",
+    feedback: "Good technical foundation but needs to improve time management and communication clarity.",
+  }
+];
 
-    
-]
+// Monthly progress data for line chart
+export const monthlyProgressData = {
+  labels: ["January", "February", "March", "April", "May", "June", "July", "August"],
+  datasets: [
+    {
+      label: "Overall Score",
+      data: [85, 78, 92, 71, 89, 83, 95, 76],
+      borderColor: "rgb(59, 130, 246)",
+      backgroundColor: "rgba(59, 130, 246, 0.1)",
+      tension: 0.4,
+      fill: true,
+    },
+    {
+      label: "Technical Score",
+      data: [88, 80, 95, 68, 91, 85, 97, 79],
+      borderColor: "rgb(16, 185, 129)",
+      backgroundColor: "rgba(16, 185, 129, 0.1)",
+      tension: 0.4,
+      fill: true,
+    },
+    {
+      label: "Communication Score",
+      data: [82, 75, 88, 74, 86, 80, 92, 73],
+      borderColor: "rgb(245, 158, 11)",
+      backgroundColor: "rgba(245, 158, 11, 0.1)",
+      tension: 0.4,
+      fill: true,
+    }
+  ]
+};
+
+// Skill breakdown data for radar chart
+export const skillBreakdownData = {
+  labels: ["Technical", "Communication", "Problem Solving", "Coding", "Time Management"],
+  datasets: [
+    {
+      label: "Average Performance",
+      data: [85, 81, 85, 84, 78],
+      backgroundColor: "rgba(59, 130, 246, 0.2)",
+      borderColor: "rgb(59, 130, 246)",
+      borderWidth: 2,
+    }
+  ]
+};
+
+export const points = interviewPerformanceData;

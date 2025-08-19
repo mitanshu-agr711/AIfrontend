@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { Calendar, Share, Edit } from 'lucide-react';
+import { Calendar, Share, Edit, BarChart3, ArrowRight } from 'lucide-react';
 import fakeInterviews from '@/Api/fake'; 
 import { GradientBackground } from '@/components/gradient-background';
+import Link from 'next/link';
 
 interface Interview {
   id: string;
@@ -149,9 +150,18 @@ const InterviewGrid: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <h3 className="font-semibold text-slate-800 text-lg leading-tight">
-                    {interview.title}
-                  </h3>
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-slate-800 text-lg leading-tight">
+                      {interview.title}
+                    </h3>
+                    <Link 
+                      href="/interview"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors"
+                    >
+                      <ArrowRight size={16} />
+                      Start Interview
+                    </Link>
+                  </div>
                 )}
                 <div className="space-y-2">
                   <div className="flex flex-col">
@@ -174,7 +184,16 @@ const InterviewGrid: React.FC = () => {
                   <span className="text-xs text-slate-400 font-medium">
                     {format(interview.date, 'MMM dd')}
                   </span>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div className="flex items-center gap-3">
+                    <Link 
+                      href="/feedback"
+                      className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium hover:bg-blue-200 transition-colors"
+                    >
+                      <BarChart3 size={12} />
+                      View Feedback
+                    </Link>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  </div>
                 </div>
               </div>
             </div>
