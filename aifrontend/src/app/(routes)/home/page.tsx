@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useRef, useState, useEffect } from "react";
+// import { useRef, useState } from "react";
 import { SoundWaveAnimation } from "@/components/soud-wave-animattion"
 import { Button } from "@/components/button"
 import Link from "next/link";
@@ -13,42 +13,21 @@ import { Navbar } from "@/components/navbar";
 
 export default function Home() {
 
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  const containerRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    function updateSize() {
-      if (containerRef.current) {
-        setSize({
-          width: containerRef.current.offsetWidth,
-          height: containerRef.current.offsetHeight,
-        });
-      }
-    }
-    updateSize();
-    window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
-  }, []);
-
-
-
-
-
    const [leftRef1, leftStyle1] = useScrollTransform({
     fromX: -100, toX: 0, fromRot: -15, toRot: 0
-  });
+  }) as [React.RefObject<HTMLDivElement>, React.CSSProperties];
 
   const [leftRef2, leftStyle2] = useScrollTransform({
     fromX: -120, toX: 0, fromRot: -18, toRot: 0
-  });
+  }) as [React.RefObject<HTMLDivElement>, React.CSSProperties];
 
   const [rightRef, rightStyle] = useScrollTransform({
     fromX: 100, toX: 0, fromRot: 15, toRot: 0
-  });
+  }) as [React.RefObject<HTMLDivElement>, React.CSSProperties];
 
   const [rightRef2, rightStyle2] = useScrollTransform({
     fromX: 120, toX: 0, fromRot: 18, toRot: 0
-  });
+  }) as [React.RefObject<HTMLDivElement>, React.CSSProperties];
 
   return (
     <div className="flex min-h-screen flex-col  overflow-x-hidden">

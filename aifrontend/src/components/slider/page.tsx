@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MessageSquare, Briefcase, BarChart3, User, LogOut, Upload } from "lucide-react";
+import { Home, MessageSquare, Briefcase, BarChart3, User, LogOut, Upload, UserPlus } from "lucide-react";
 
 const SideBar = () => {
   const pathname = usePathname();
@@ -28,6 +28,11 @@ const SideBar = () => {
       name: "Feedback",
       href: "/feedback",
       icon: BarChart3,
+    },
+    {
+      name: "Register",
+      href: "/register",
+      icon: UserPlus,
     }
   ];
 
