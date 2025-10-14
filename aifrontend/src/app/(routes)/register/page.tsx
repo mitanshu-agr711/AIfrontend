@@ -1,14 +1,19 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { X, ChevronDown, Check } from 'lucide-react';
 import Image from 'next/image';
 
 const API = process.env.NEXT_PUBLIC_API;
-console.log("API:", API);
+// console.log("API:", API);
 
 const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     username: '',
     name: '',
@@ -16,17 +21,22 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
     password: '',
     avatar: ''
   });
+
   const [images, setImages] = useState<string[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
-  const toggleAuth = () => setIsLogin(!isLogin);
+  const toggleAuth = () => {
+    setIsLogin(!isLogin);
+    setError(null);
+  };
 
   const handleClose = useCallback(() => {
     onClose();
+    setError(null);
   }, [onClose]);
 
-  // ✅ Fetch avatar images when signup modal opens
+  // ✅ Fetch avatars when signup modal opens
   useEffect(() => {
     const fetchImages = async () => {
       try {
@@ -50,7 +60,7 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
     if (!isLogin && isOpen) fetchImages();
   }, [isLogin, isOpen]);
 
-  // ✅ Close modal or avatar picker on Escape key
+  // ✅ Close modal or picker on ESC
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isOpen) {
@@ -78,20 +88,59 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
     setShowAvatarPicker(false);
   };
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const passwordRegex = /^.{6,}$/;
+
   const handleSubmit = async () => {
+    setError(null);
+
+    // ✅ Frontend validation
     if (isLogin) {
-      console.log('Logging in with:', formData);
-      // 🟦 Example: call login API
-      // await fetch(`${API}/auth/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(formData) });
-    } else {
-      if (!formData.avatar) {
-        alert('Please select an avatar before signing up!');
+      if (!formData.username || !formData.password) {
+        setError("Please fill all fields before logging in.");
         return;
       }
+    } else {
+      if (!formData.name || !formData.username || !formData.email || !formData.password) {
+        setError("All fields are required for sign up.");
+        return;
+      }
+      if (!emailRegex.test(formData.email)) {
+        setError("Please enter a valid email address.");
+        return;
+      }
+      if (!passwordRegex.test(formData.password)) {
+        setError("Password must be at least 6 characters long.");
+        return;
+      }
+      if (!formData.avatar) {
+        setError("Please select an avatar before signing up.");
+        return;
+      }
+    }
 
-      console.log('Signing up with:', formData);
-      // 🟦 Example: call register API
-      // await fetch(`${API}/auth/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(formData) });
+    try {
+      setLoading(true);
+      const res = await fetch(`${API}/auth/${isLogin ? 'login' : 'register'}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        setError(result.message || "Something went wrong! Please try again.");
+      } else {
+        // ✅ Success
+        console.log(isLogin ? 'Logged in successfully' : 'Registered successfully');
+        router.push('/');
+        handleClose();
+      }
+    } catch (err) {
+      setError("Network error! Please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -124,6 +173,13 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
         <h2 className="text-2xl font-bold text-center text-slate-800 mb-2">
           {isLogin ? 'Login to Your Account' : 'Create an Account'}
         </h2>
+
+        {/* Error Message */}
+        {error && (
+          <div className="text-red-500 text-sm text-center bg-red-50 border border-red-200 py-2 rounded-md">
+            {error}
+          </div>
+        )}
 
         {/* Form */}
         <div className="space-y-4">
@@ -216,7 +272,6 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
                   <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showAvatarPicker ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* Avatar Dropdown */}
                 {showAvatarPicker && (
                   <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-300 rounded-lg shadow-xl z-20 max-h-64 overflow-y-auto">
                     {loadingImages ? (
@@ -266,10 +321,13 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
 
           {/* Submit Button */}
           <button
+            disabled={loading}
             onClick={handleSubmit}
-            className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white py-2 rounded-lg font-semibold shadow hover:from-sky-600 hover:to-blue-700 transition cursor-pointer"
+            className={`w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white py-2 rounded-lg font-semibold shadow hover:from-sky-600 hover:to-blue-700 transition cursor-pointer ${
+              loading ? 'opacity-70 cursor-not-allowed' : ''
+            }`}
           >
-            {isLogin ? 'Login' : 'Sign Up'}
+            {loading ? 'Please wait...' : isLogin ? 'Login' : 'Sign Up'}
           </button>
         </div>
 
@@ -296,7 +354,7 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
           Continue with Gmail
         </button>
 
-        {/* Toggle Login/Signup */}
+        {/* Toggle */}
         <p className="text-center text-sm text-slate-600">
           {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
           <button
