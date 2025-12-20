@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, ChevronDown, Check } from 'lucide-react';
 import Image from 'next/image';
-
-const API = process.env.NEXT_PUBLIC_API;
+import { api } from '@/lib/api';
 // console.log("API:", API);
 
 const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
@@ -36,16 +35,14 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
     setError(null);
   }, [onClose]);
 
-  // ✅ Fetch avatars when signup modal opens
+
   useEffect(() => {
     const fetchImages = async () => {
       try {
         setLoadingImages(true);
-        const res = await fetch(`${API}/image/images`);
-        const result = await res.json();
-
+        const result = await api.getAvatars();
         if (Array.isArray(result.data)) {
-          const urls = result.data.map((item: any) => item.avatar);
+          const urls = result.data.map((item) => item.avatar);
           setImages(urls);
         } else {
           setImages([]);
@@ -60,7 +57,7 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
     if (!isLogin && isOpen) fetchImages();
   }, [isLogin, isOpen]);
 
-  // ✅ Close modal or picker on ESC
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isOpen) {
@@ -94,7 +91,7 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
   const handleSubmit = async () => {
     setError(null);
 
-    // ✅ Frontend validation
+    
     if (isLogin) {
       if (!formData.username || !formData.password) {
         setError("Please fill all fields before logging in.");
@@ -121,24 +118,17 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
 
     try {
       setLoading(true);
-      const res = await fetch(`${API}/auth/${isLogin ? 'login' : 'register'}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        setError(result.message || "Something went wrong! Please try again.");
+      if (isLogin) {
+        await api.login({ username: formData.username, password: formData.password });
       } else {
-        // ✅ Success
-        console.log(isLogin ? 'Logged in successfully' : 'Registered successfully');
-        router.push('/');
-        handleClose();
+        await api.register(formData);
       }
+
+      console.log(isLogin ? 'Logged in successfully' : 'Registered successfully');
+      router.push('/');
+      handleClose();
     } catch (err) {
-      setError("Network error! Please try again later.");
+      setError((err as Error).message || "Network error! Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -159,7 +149,7 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
         className="bg-white w-full max-w-sm p-8 rounded-2xl shadow-2xl space-y-7 border border-slate-100 relative transition-all duration-300"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
+     
         <button
           onClick={handleClose}
           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-red-500 shadow-md hover:shadow-lg border border-gray-300 hover:border-red-500 transition-all duration-200 z-10 cursor-pointer flex items-center justify-center group"
@@ -169,19 +159,18 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
           <X className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors duration-200" />
         </button>
 
-        {/* Title */}
+   
         <h2 className="text-2xl font-bold text-center text-slate-800 mb-2">
           {isLogin ? 'Login to Your Account' : 'Create an Account'}
         </h2>
 
-        {/* Error Message */}
         {error && (
           <div className="text-red-500 text-sm text-center bg-red-50 border border-red-200 py-2 rounded-md">
             {error}
           </div>
         )}
 
-        {/* Form */}
+      
         <div className="space-y-4">
           {isLogin ? (
             <>
@@ -319,7 +308,7 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
             </>
           )}
 
-          {/* Submit Button */}
+         
           <button
             disabled={loading}
             onClick={handleSubmit}
@@ -331,7 +320,7 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
           </button>
         </div>
 
-        {/* OR Divider */}
+  
         <div className="relative my-3">
           <hr className="border-t border-slate-200" />
           <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-sm text-slate-500">
@@ -339,7 +328,7 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
           </span>
         </div>
 
-        {/* Gmail Auth */}
+     
         <button
           onClick={handleGmailAuth}
           className="w-full flex items-center justify-center gap-2 border border-slate-300 py-2 rounded-lg hover:bg-slate-100 transition font-medium cursor-pointer"
@@ -354,7 +343,7 @@ const AuthModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }
           Continue with Gmail
         </button>
 
-        {/* Toggle */}
+
         <p className="text-center text-sm text-slate-600">
           {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
           <button

@@ -105,7 +105,7 @@ const InterviewPage = () => {
 
                 <Button
                     onClick={endInterview}
-                    className="bg-red-500/90 backdrop-blur-sm hover:bg-red-600 text-white shadow-lg"
+                    className="bg-red-500/90 backdrop-blur-sm hover:bg-red-600 text-white shadow-lg cursor-pointer"
                 >
                     End Interview
                 </Button>
@@ -143,7 +143,7 @@ const InterviewPage = () => {
                                 isListening 
                                     ? "bg-emerald-500 hover:bg-emerald-600" 
                                     : "bg-white/10 hover:bg-white/20"
-                            } backdrop-blur-sm border-white/20 text-white`}
+                            } backdrop-blur-sm border-white/20 text-white cursor-pointer`}
                         >
                             {isListening ? <Mic className="w-4 h-4 mr-2" /> : <MicOff className="w-4 h-4 mr-2" />}
                             {isListening ? "Listening..." : "Start Speaking"}
@@ -152,7 +152,7 @@ const InterviewPage = () => {
                         <Button
                             onClick={() => handleBotSpeaking(!isSpeaking)}
                             variant="outline"
-                            className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-white/20 text-white"
+                            className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-white/20 text-white cursor-pointer"
                         >
                             {isSpeaking ? "Stop Bot" : "Bot Speak"}
                         </Button>

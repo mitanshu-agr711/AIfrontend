@@ -43,25 +43,28 @@ export default function Home() {
             </div>
             <div className="hero-glow">
               <h1 className="font-heading text-3xl sm:text-5xl md:text-6xl lg:text-7xl  text-blue-500">
-                AI-Powered Social Media Intelligence
+               AI that senses skills, strengths, weaknesses.
               </h1>
             </div>
             <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8 glass-effect p-4 rounded-lg">
-              Get on the same wavelength as your audience with real-time sentiment analysis, platform-specific content
-              adaptation, and predictive trend integration.
+             Experience real-time AI analysis, smart content optimization, predictive trend insights, and a powerful advanced analytics dashboard—all in one intelligent interview platform.
             </p>
             <div className="flex flex-wrap justify-center gap-4 mt-6">
-              <Button size="lg" className="bg-blue-500 hover:bg-blue-600" asChild>
+              <Button size="lg" className="bg-blue-500 hover:bg-blue-600 cursor-pointer" asChild>
                 <Link href="/workspace">
                   Start Interview <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="glass-button" asChild>
+              <Button size="lg"  className="glass-button hover:bg-blue-500 cursor-pointer" asChild>
                 <Link href="/feedback">View Your Progress</Link>
               </Button>
             </div>
           </div>
         </section>
+
+        {/* // Features Section */}
+
+
        <section id="features" className="py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
           <div className="max-w-7xl mx-auto space-y-32 overflow-hidden">
             <h1 className="font-bold text-[4rem] sm:text-[5rem] lg:text-[10rem] text-transparent  bg-clip-text bg-gradient-to-r from-blue-700 via-white to-blue-500">Features</h1>

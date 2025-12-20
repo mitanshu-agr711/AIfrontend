@@ -29,8 +29,8 @@ export const Navbar = () => {
               </a>
             </li>
             <li>
-              <a href="/feature" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
-                Feature
+              <a href="#features" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
+                Features
               </a>
             </li>
             <li>
