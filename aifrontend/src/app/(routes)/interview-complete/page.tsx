@@ -4,8 +4,21 @@ import Link from "next/link";
 import { CheckCircle, BarChart3, Home, ArrowRight } from "lucide-react";
 import { Button } from "@/components/button";
 import { GradientBackground } from "@/components/gradient-background";
+import { useAuthStore } from "@/stores/authStore";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const InterviewCompletePage = () => {
+  const router = useRouter();
+  const { isAuthenticated, hydrated } = useAuthStore();
+
+  // Check authentication before allowing access
+  useEffect(() => {
+    if (hydrated && !isAuthenticated) {
+      router.push('/register');
+    }
+  }, [hydrated, isAuthenticated, router]);
+
   return (
     <>
       <GradientBackground />

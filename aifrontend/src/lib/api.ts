@@ -1,10 +1,24 @@
-// Centralized API client using NEXT_PUBLIC_API base URL
-// Provides typed helpers for backend routes with automatic token management
-import { useAuthStore } from '@/stores/authStore';
+
+import { useAuthStore, type User } from '@/stores/authStore';
+import { handleError, AppError } from './errorHandler';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API as string;
 
 type JsonInit = Omit<RequestInit, 'body'> & { body?: unknown };
+
+// Backend response types
+interface BackendAuthResponse {
+  accessToken: string;
+  user: {
+    id?: string;
+    _id?: string;
+    username?: string;
+    name?: string;
+    email: string;
+    avatar?: string;
+  };
+  message?: string;
+}
 
 const withJson = (init?: JsonInit) => {
   const headers: HeadersInit = {
@@ -12,7 +26,11 @@ const withJson = (init?: JsonInit) => {
     ...(init?.headers || {}),
   };
   const { body, ...rest } = init || {};
-  const finalInit: RequestInit = { ...rest, headers };
+  const finalInit: RequestInit = { 
+    ...rest, 
+    headers,
+    credentials: init?.credentials || 'include' 
+  };
   if (body !== undefined) finalInit.body = JSON.stringify(body as unknown as string);
   return finalInit;
 };
@@ -28,54 +46,44 @@ async function handle<T>(res: Response): Promise<T> {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const message = (data && (data.message || data.error)) || `HTTP ${res.status}`;
-    throw new Error(String(message));
+    throw new AppError(String(message), res.status);
   }
   return data as T;
 }
 
-// Token refresh logic
-async function refreshAccessToken(): Promise<string | null> {
-  try {
-    const refreshToken = useAuthStore.getState().getRefreshToken();
-    if (!refreshToken) return null;
 
-    const res = await fetch(`${BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    });
+// Removed token refresh - using httpOnly cookies for session management
 
-    if (!res.ok) {
-      useAuthStore.getState().logout();
-      return null;
-    }
-
-    const data = await res.json();
-    if (data.accessToken) {
-      useAuthStore.getState().updateAccessToken(data.accessToken);
-      return data.accessToken;
-    }
-
-    return null;
-  } catch (err) {
-    console.error('Token refresh failed:', err);
-    useAuthStore.getState().logout();
-    return null;
-  }
-}
-
-// Enhanced fetch with auto token refresh
 async function authFetch<T>(url: string, init?: RequestInit): Promise<T> {
-  // First attempt with current access token
-  let headers = { ...getAuthHeader(), ...(init?.headers || {}) };
-  let res = await fetch(url, { ...init, headers });
+  // Verify token exists before making request
+  const token = useAuthStore.getState().getAccessToken();
+  if (!token) {
+    console.error('No access token found - user not authenticated');
+    useAuthStore.getState().logout();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/register';
+    }
+    throw new AppError('Authentication required', 401);
+  }
 
-  // If unauthorized, try to refresh token and retry
+  // Debug: Log token being sent
+  console.log('🔑 Making authenticated request to:', url);
+  console.log('🔑 Token (first 20 chars):', token.substring(0, 20) + '...');
+
+  // Include credentials to send httpOnly cookies
+  const headers = { ...getAuthHeader(), ...(init?.headers || {}) };
+  const res = await fetch(url, { ...init, headers, credentials: 'include' });
+
+  // Debug: Log response status
+  console.log('📡 Response status:', res.status);
+
+  // If 401, logout user (session expired)
   if (res.status === 401) {
-    const newToken = await refreshAccessToken();
-    if (newToken) {
-      headers = { Authorization: `Bearer ${newToken}`, ...(init?.headers || {}) };
-      res = await fetch(url, { ...init, headers });
+    console.error('❌ Authentication failed - token invalid or expired');
+    console.error('Token that failed:', token.substring(0, 20) + '...');
+    useAuthStore.getState().logout();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/register';
     }
   }
 
@@ -83,60 +91,184 @@ async function authFetch<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  // Images
+
   async getAvatars(): Promise<{ success?: boolean; data: Array<{ avatar: string }> }> {
-    const res = await fetch(`${BASE_URL}/image/images`);
-    return handle(res);
+    try {
+      const res = await fetch(`${BASE_URL}/image/images`);
+      return handle(res);
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
   },
 
   // Auth
-  async register(payload: { username: string; name: string; email: string; password: string; avatar: string }): Promise<{ token: string; refreshToken: string; user: any }> {
-    const res = await fetch(`${BASE_URL}/auth/register`, withJson({ method: 'POST', body: payload }));
-    return handle(res);
+  async register(payload: { username: string; name: string; email: string; password: string; avatar: string }): Promise<{ token: string; user: User }> {
+    try {
+      const res = await fetch(`${BASE_URL}/auth/register`, withJson({ method: 'POST', body: payload }));
+      const data = await handle<BackendAuthResponse>(res);
+      return {
+        token: data.accessToken,
+        user: {
+          _id: data.user.id || data.user._id || '',
+          username: data.user.username || data.user.email?.split('@')[0] || '',
+          name: data.user.name || data.user.username || '',
+          email: data.user.email,
+          avatar: data.user.avatar || ''
+        }
+      };
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
   },
-  async login(payload: { username: string; password: string }): Promise<{ token: string; refreshToken: string; user: any }> {
-    const res = await fetch(`${BASE_URL}/auth/login`, withJson({ method: 'POST', body: payload }));
-    return handle(res);
+  async login(payload: { username: string; password: string }): Promise<{ token: string; user: User }> {
+    try {
+      const res = await fetch(`${BASE_URL}/auth/login`, withJson({ method: 'POST', body: payload }));
+      const data = await handle<BackendAuthResponse>(res);
+      
+      console.log('✅ Login successful');
+      console.log('📦 Backend response:', { 
+        hasToken: !!data.accessToken, 
+        tokenPreview: data.accessToken?.substring(0, 20) + '...',
+        user: data.user 
+      });
+      
+      return {
+        token: data.accessToken,
+        user: {
+          _id: data.user.id || data.user._id || '',
+          username: data.user.username || data.user.email?.split('@')[0] || '',
+          name: data.user.name || data.user.username || '',
+          email: data.user.email,
+          avatar: data.user.avatar || ''
+        }
+      };
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
+  },
+
+  // Auth logout - clears httpOnly cookies on backend
+  async logout() {
+    try {
+      await fetch(`${BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      useAuthStore.getState().logout();
+    } catch (error) {
+      // Logout locally even if backend call fails
+      console.error('Logout error:', error);
+      useAuthStore.getState().logout();
+    }
   },
 
   // Workspace - with auto token refresh
   async createWorkspace(title: string) {
-    return authFetch(`${BASE_URL}/api/workspace/create`, withJson({ method: 'POST', body: { title } }));
+    try {
+      return await authFetch(`${BASE_URL}/api/workspace/create`, withJson({ method: 'POST', body: { title } }));
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
   },
   async renameWorkspace(id: string, title: string) {
-    return authFetch(`${BASE_URL}/api/workspace/${id}/rename`, withJson({ method: 'PUT', body: { title } }));
+    try {
+      return await authFetch(`${BASE_URL}/api/workspace/${id}/rename`, withJson({ method: 'PUT', body: { title } }));
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
   },
   async deleteWorkspace(id: string) {
-    return authFetch(`${BASE_URL}/api/workspace/${id}/delete`, { method: 'DELETE', headers: getAuthHeader() });
+    try {
+      return await authFetch(`${BASE_URL}/api/workspace/${id}/delete`, { method: 'DELETE', headers: getAuthHeader() });
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
   },
   async getWorkspaces() {
-    return authFetch(`${BASE_URL}/api/workspace/`);
+    try {
+      return await authFetch(`${BASE_URL}/api/workspace`);
+    } catch (error) {
+      // If 404, it means no workspaces exist yet - return empty array (don't show error toast)
+      if (error instanceof AppError && error.statusCode === 404) {
+        console.log('No workspaces found, starting fresh!');
+        return { workspaces: [] };
+      }
+      handleError(error);
+      throw error;
+    }
   },
   async getWorkspaceById(id: string) {
-    return authFetch(`${BASE_URL}/api/workspace/${id}`);
+    try {
+      return await authFetch(`${BASE_URL}/api/workspace/${id}`);
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
   },
 
   // Interview - with auto token refresh
   async createInterview(payload: { workspaceId: string; title?: string; description?: string; topic: string; difficulty: string; numberOfQuestions: number }) {
-    return authFetch(`${BASE_URL}/api/interview/create`, withJson({ method: 'POST', body: payload }));
+    try {
+      return await authFetch(`${BASE_URL}/api/interview/create`, withJson({ method: 'POST', body: payload }));
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
   },
   async startInterview(interviewId: string) {
-    return authFetch(`${BASE_URL}/api/interview/${interviewId}/start`, withJson({ method: 'POST' }));
+    try {
+      return await authFetch(`${BASE_URL}/api/interview/${interviewId}/start`, withJson({ method: 'POST' }));
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
   },
   async submitAnswer(payload: { interviewId: string; questionId: string; userAnswer: string; timeTaken?: number }) {
-    return authFetch(`${BASE_URL}/api/interview/submit-answer`, withJson({ method: 'POST', body: payload }));
+    try {
+      return await authFetch(`${BASE_URL}/api/interview/submit-answer`, withJson({ method: 'POST', body: payload }));
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
   },
   async completeInterview(interviewId: string) {
-    return authFetch(`${BASE_URL}/api/interview/${interviewId}/complete`, withJson({ method: 'POST' }));
+    try {
+      return await authFetch(`${BASE_URL}/api/interview/${interviewId}/complete`, withJson({ method: 'POST' }));
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
   },
   async getInterviewDetails(interviewId: string) {
-    return authFetch(`${BASE_URL}/api/interview/${interviewId}`);
+    try {
+      return await authFetch(`${BASE_URL}/api/interview/${interviewId}`);
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
   },
   async getWorkspaceInterviews(workspaceId: string) {
-    return authFetch(`${BASE_URL}/api/interview/workspace/${workspaceId}`);
+    try {
+      return await authFetch(`${BASE_URL}/api/interview/workspace/${workspaceId}`);
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
   },
   async getUserAnalytics() {
-    return authFetch(`${BASE_URL}/api/interview/analytics/user`);
+    try {
+      return await authFetch(`${BASE_URL}/api/interview/analytics/user`);
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
   },
 };
 

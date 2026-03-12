@@ -32,7 +32,8 @@
     "recharts": "^2.15.3",
     "simplex-noise": "^4.0.3",
     "tailwind-merge": "^3.3.0",
-    "taos": "^1.0.5"
+    "taos": "^1.0.5",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

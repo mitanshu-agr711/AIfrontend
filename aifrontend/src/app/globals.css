@@ -139,3 +139,19 @@
   content: "";
   @apply absolute -z-10 w-full h-full top-0 left-0 blur-3xl opacity-30 bg-gradient-to-r from-primary/50 to-purple-500/50 rounded-full;
 }
+
+/* Error Toast Animation */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}

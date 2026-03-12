@@ -3,8 +3,10 @@ import dynamic from "next/dynamic";
 import "chart.js/auto";
 import Slider from "@/components/slider/page";
 import { interviewPerformanceData, monthlyProgressData, skillBreakdownData } from "@/Api/points";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar, Clock, Award, TrendingUp, Edit, Save, X } from "lucide-react";
+import { useAuthStore } from "@/stores/authStore";
+import { useRouter } from "next/navigation";
 
 const Line = dynamic(() => import("react-chartjs-2").then((mod) => mod.Line), {
   ssr: false,
@@ -19,9 +21,18 @@ const Radar = dynamic(() => import("react-chartjs-2").then((mod) => mod.Radar), 
 });
 
 const FeedbackPage = () => {
+  const router = useRouter();
+  const { isAuthenticated, hydrated } = useAuthStore();
   const [selectedInterview, setSelectedInterview] = useState(interviewPerformanceData[0]);
   const [editMode, setEditMode] = useState(false);
   const [editedFeedback, setEditedFeedback] = useState(selectedInterview.feedback);
+
+  // Check authentication before allowing access
+  useEffect(() => {
+    if (hydrated && !isAuthenticated) {
+      router.push('/register');
+    }
+  }, [hydrated, isAuthenticated, router]);
 
   // Chart options for better styling
   const chartOptions = {

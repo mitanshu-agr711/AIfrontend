@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Menu, PanelRightClose } from "lucide-react";
 import Logo from "@/components/lib/logo/page";
-import AuthModal from "@/app/(routes)/register/page";
+import AuthModal from "@/components/AuthModal";
 
 export const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -98,14 +98,13 @@ export const Navbar = () => {
             </li>
           </ul>
         </div>
-      </nav>
+      </nav> 
+     <AuthModal
+  isOpen={showAuth}
+  onClose={() => setShowAuth(false)}
+  mode="modal"
+/>
 
- 
- 
-      <AuthModal 
-        isOpen={showAuth} 
-        onClose={() => setShowAuth(false)} 
-      />
     </>
   );
 };

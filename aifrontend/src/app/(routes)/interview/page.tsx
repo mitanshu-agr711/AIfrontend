@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation'
 import InterviewBot from '@/components/InterviewBot'
 import { Button } from '@/components/button'
 import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react'
+import { useAuthStore } from '@/stores/authStore'
 
 const InterviewPage = () => {
     const router = useRouter()
+    const { isAuthenticated, hydrated } = useAuthStore()
     const [showBlur, setShowBlur] = useState(true)
     const [timer, setTimer] = useState(600)
     const [timerActive, setTimerActive] = useState(false)
@@ -17,6 +19,13 @@ const InterviewPage = () => {
     const [isListening, setIsListening] = useState(false)
     const [isSpeaking, setIsSpeaking] = useState(false)
     const [isMuted, setIsMuted] = useState(false)
+
+    // Check authentication before allowing access
+    useEffect(() => {
+        if (hydrated && !isAuthenticated) {
+            router.push('/register')
+        }
+    }, [hydrated, isAuthenticated, router])
 
     useEffect(() => {
         if (!showBlur) return
