@@ -135,7 +135,7 @@ const InterviewSessionPage = () => {
 
         await api.completeInterview(interviewId)
 
-        router.push('/interview-complete')
+        router.push(`/interview-complete?interviewId=${interviewId}`)
       } catch (err) {
         console.error('Auto submit failed:', err)
       }
@@ -206,14 +206,14 @@ const InterviewSessionPage = () => {
       setTimeout(async () => {
         setIsSpeaking(false)
         try { await api.completeInterview(interviewId) } catch { /* ignore */ }
-        router.push('/interview-complete')
+        router.push(`/interview-complete?interviewId=${interviewId}`)
       }, 2500)
     }
   }
 
   const handleEndInterview = async () => {
     try { await api.completeInterview(interviewId) } catch { /* ignore */ }
-    router.push('/interview-complete')
+    router.push(`/interview-complete?interviewId=${interviewId}`)
   }
 
   if (!hydrated || loadingInterview) {
