@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Plus, Calendar, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar, BarChart3, ArrowRight } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { GradientBackground } from '@/components/gradient-background';
@@ -13,8 +13,6 @@ interface Interview {
   _id: string;
   title?: string;
   topic: string;
-  difficulty: string;
-  numberOfQuestions: number;
   status: string;
   createdAt: string;
 }
@@ -30,7 +28,7 @@ export default function WorkspaceDetailPage() {
   const params = useParams();
   const router = useRouter();
   const workspaceId = params.id as string;
-  
+
   const { isAuthenticated, hydrated } = useAuthStore();
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
   const [interviews, setInterviews] = useState<Interview[]>([]);
@@ -38,14 +36,21 @@ export default function WorkspaceDetailPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
-    if (!hydrated) return;
-    
-    if (hydrated && !isAuthenticated) {
-      router.push('/register');
-      return;
-    }
+    const init = async () => {
+      if (!hydrated) return;
 
-    fetchWorkspaceData();
+      if (!isAuthenticated) {
+        const restored = await api.restoreSession();
+        if (!restored) {
+          router.push('/register');
+          return;
+        }
+      }
+
+      fetchWorkspaceData();
+    };
+
+    init();
   }, [hydrated, isAuthenticated, workspaceId, router]);
 
   const fetchWorkspaceData = async () => {
@@ -53,14 +58,12 @@ export default function WorkspaceDetailPage() {
 
     try {
       setLoading(true);
-      
-      // Fetch workspace details
+
       const workspaceResult = await api.getWorkspaceById(workspaceId) as { workspace: WorkspaceDetail };
       if (workspaceResult.workspace) {
         setWorkspace(workspaceResult.workspace);
       }
 
-      // Fetch interviews for this workspace
       const interviewsResult = await api.getWorkspaceInterviews(workspaceId) as { interviews: Interview[] };
       if (interviewsResult.interviews) {
         setInterviews(interviewsResult.interviews);
@@ -73,7 +76,6 @@ export default function WorkspaceDetailPage() {
   };
 
   const handleInterviewCreated = () => {
-    // Refresh the interviews list after creating a new one
     fetchWorkspaceData();
   };
 
@@ -81,24 +83,18 @@ export default function WorkspaceDetailPage() {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
-      case 'easy': return 'bg-green-100 text-green-700';
-      case 'medium': return 'bg-yellow-100 text-yellow-700';
-      case 'hard': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'completed': return 'bg-blue-100 text-blue-700';
-      case 'in-progress': return 'bg-purple-100 text-purple-700';
-      default: return 'bg-gray-100 text-gray-700';
+      case 'completed':
+        return 'bg-blue-100 text-blue-700';
+      case 'in-progress':
+        return 'bg-purple-100 text-purple-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -130,29 +126,26 @@ export default function WorkspaceDetailPage() {
   return (
     <>
       <GradientBackground />
-      
+
       <div className="min-h-screen p-8 pt-24">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
           <div className="mb-8">
-            <Link 
-              href="/workspace" 
+            <Link
+              href="/workspace"
               className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Workspaces
             </Link>
-            
+
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-4xl font-bold text-slate-800 mb-2">
-                  {workspace.title}
-                </h1>
+                <h1 className="text-4xl font-bold text-slate-800 mb-2">{workspace.title}</h1>
                 <p className="text-slate-600">
                   Created on {formatDate(workspace.createdAt)} • {interviews.length} interview{interviews.length !== 1 ? 's' : ''}
                 </p>
               </div>
-              
+
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all cursor-pointer"
@@ -163,18 +156,13 @@ export default function WorkspaceDetailPage() {
             </div>
           </div>
 
-          {/* Interviews Grid */}
           {interviews.length === 0 ? (
             <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-12 text-center shadow-lg">
               <div className="mb-4">
                 <Calendar className="w-16 h-16 mx-auto text-slate-300" />
               </div>
-              <h3 className="text-xl font-semibold text-slate-700 mb-2">
-                No interviews yet
-              </h3>
-              <p className="text-slate-500 mb-6">
-                Create your first interview to get started
-              </p>
+              <h3 className="text-xl font-semibold text-slate-700 mb-2">No interviews yet</h3>
+              <p className="text-slate-500 mb-6">Create your first interview to get started</p>
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all cursor-pointer"
@@ -187,43 +175,55 @@ export default function WorkspaceDetailPage() {
               {interviews.map((interview) => (
                 <div
                   key={interview._id}
-                  className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all cursor-pointer group"
+                  className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-slate-200 hover:border-blue-300 transform hover:-translate-y-1 flex flex-col justify-between group"
                 >
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors">
+                  <div>
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="bg-blue-100 p-3 rounded-lg">
+                        <Calendar color="#2563eb" size={24} />
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(interview.status)}`}>
+                        {interview.status}
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-slate-800 text-lg leading-tight line-clamp-2 min-h-[3.5rem] group-hover:text-blue-600 transition-colors">
                         {interview.title || interview.topic}
                       </h3>
-                      <p className="text-sm text-slate-600">
-                        {interview.topic}
-                      </p>
+                      <p className="text-sm text-slate-500">{interview.topic}</p>
+
+                      <Link
+                        href={`/interview/${interview._id}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors w-full justify-center"
+                      >
+                        <ArrowRight size={16} />
+                        Start Interview
+                      </Link>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(interview.difficulty)}`}>
-                      {interview.difficulty}
-                    </span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(interview.status)}`}>
-                      {interview.status}
-                    </span>
-                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                      {interview.numberOfQuestions} questions
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {formatDate(interview.createdAt)}
-                    </span>
-                    
-                    <Link 
-                      href={`/interview/${interview._id}`}
-                      className="text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      Start →
-                    </Link>
+                  <div className="mt-4 pt-4 border-t border-slate-100">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500 font-medium">Created</span>
+                      <span className="text-slate-700 font-semibold">{formatDate(interview.createdAt)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm mt-1">
+                      <span className="text-slate-500 font-medium">Day</span>
+                      <span className="text-slate-700 font-semibold">
+                        {new Date(interview.createdAt).toLocaleDateString('en-US', { weekday: 'long' })}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between mt-3">
+                      <Link
+                        href={`/workspace/${workspace._id}/analytics`}
+                        className="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium hover:bg-blue-100 transition-colors"
+                      >
+                        <BarChart3 size={12} />
+                        Analytics
+                      </Link>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -232,7 +232,6 @@ export default function WorkspaceDetailPage() {
         </div>
       </div>
 
-      {/* Create Interview Modal */}
       <CreateInterviewModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}

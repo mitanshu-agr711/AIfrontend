@@ -1,4 +1,3 @@
-
 import { useAuthStore, type User } from '@/stores/authStore';
 import { handleError, AppError } from './errorHandler';
 
@@ -51,14 +50,89 @@ async function handle<T>(res: Response): Promise<T> {
   return data as T;
 }
 
+// Flag to prevent multiple refresh attempts
+let isRefreshing = false;
+let refreshPromise: Promise<string> | null = null;
 
-// Removed token refresh - using httpOnly cookies for session management
+// Refresh access token using httpOnly cookie (refresh token sent automatically by browser)
+async function refreshAccessToken(): Promise<string> {
+  // If already refreshing, wait for that refresh to complete
+  if (isRefreshing && refreshPromise) {
+    console.log('⏳ Token refresh already in progress, waiting...');
+    return refreshPromise;
+  }
 
-async function authFetch<T>(url: string, init?: RequestInit): Promise<T> {
+  isRefreshing = true;
+  
+  refreshPromise = (async () => {
+    try {
+      console.log('🔄 Refreshing access token...');
+      
+      // Call refresh endpoint - browser automatically sends httpOnly refresh cookie
+      const res = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include', // Important: sends httpOnly cookies
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new AppError(
+          errorData.message || 'Token refresh failed', 
+          res.status
+        );
+      }
+
+      const data = await res.json() as { accessToken: string };
+      
+      if (!data.accessToken) {
+        throw new AppError('No access token in refresh response', 400);
+      }
+
+      // Update access token in store
+      useAuthStore.getState().updateAccessToken(data.accessToken);
+      
+      console.log('✅ Token refreshed successfully');
+      console.log('🔑 New token (first 20 chars):', data.accessToken.substring(0, 20) + '...');
+      
+      return data.accessToken;
+
+    } catch (error) {
+      console.error('❌ Token refresh failed:', error);
+      
+      // Refresh token expired or invalid - logout user
+      useAuthStore.getState().logout();
+      // if (typeof window !== 'undefined') {
+      //   window.location.href = '/register';
+      // }
+      
+      throw error;
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
+// Authenticated fetch with automatic token refresh on 401/403
+async function authFetch<T>(url: string, init?: RequestInit, retryCount = 0): Promise<T> {
   // Verify token exists before making request
   const token = useAuthStore.getState().getAccessToken();
   if (!token) {
-    console.error('No access token found - user not authenticated');
+    console.warn('No access token found, trying refresh token flow...');
+
+    if (retryCount === 0) {
+      try {
+        await refreshAccessToken();
+        return authFetch<T>(url, init, retryCount + 1);
+      } catch (error) {
+        throw error;
+      }
+    }
+
+    console.error('No access token found after refresh attempt');
     useAuthStore.getState().logout();
     if (typeof window !== 'undefined') {
       window.location.href = '/register';
@@ -66,7 +140,6 @@ async function authFetch<T>(url: string, init?: RequestInit): Promise<T> {
     throw new AppError('Authentication required', 401);
   }
 
-  // Debug: Log token being sent
   console.log('🔑 Making authenticated request to:', url);
   console.log('🔑 Token (first 20 chars):', token.substring(0, 20) + '...');
 
@@ -74,13 +147,30 @@ async function authFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const headers = { ...getAuthHeader(), ...(init?.headers || {}) };
   const res = await fetch(url, { ...init, headers, credentials: 'include' });
 
-  // Debug: Log response status
   console.log('📡 Response status:', res.status);
 
-  // If 401, logout user (session expired)
-  if (res.status === 401) {
-    console.error('❌ Authentication failed - token invalid or expired');
-    console.error('Token that failed:', token.substring(0, 20) + '...');
+  // If 401 or 403 and first attempt, try to refresh token
+  if ((res.status === 401 || res.status === 403) && retryCount === 0) {
+    console.log('⚠️ Access token expired (status ' + res.status + '), attempting refresh...');
+    
+    try {
+      // Refresh access token (uses httpOnly cookie)
+      await refreshAccessToken();
+      
+      // Retry original request with new token
+      console.log('🔁 Retrying original request with new token...');
+      return authFetch<T>(url, init, retryCount + 1);
+      
+    } catch (error) {
+      // Refresh failed, user logged out in refreshAccessToken
+      console.error('❌ Refresh failed, user logged out');
+      throw error;
+    }
+  }
+
+  // If 401/403 on retry, or other error, handle normally
+  if (res.status === 401 || res.status === 403) {
+    console.error('❌ Authentication failed even after refresh attempt');
     useAuthStore.getState().logout();
     if (typeof window !== 'undefined') {
       window.location.href = '/register';
@@ -91,6 +181,15 @@ async function authFetch<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+
+  async restoreSession(): Promise<boolean> {
+    try {
+      await refreshAccessToken();
+      return true;
+    } catch {
+      return false;
+    }
+  },
 
   async getAvatars(): Promise<{ success?: boolean; data: Array<{ avatar: string }> }> {
     try {
@@ -122,6 +221,7 @@ export const api = {
       throw error;
     }
   },
+  
   async login(payload: { username: string; password: string }): Promise<{ token: string; user: User }> {
     try {
       const res = await fetch(`${BASE_URL}/auth/login`, withJson({ method: 'POST', body: payload }));
@@ -214,7 +314,7 @@ export const api = {
   },
 
   // Interview - with auto token refresh
-  async createInterview(payload: { workspaceId: string; title?: string; description?: string; topic: string; difficulty: string; numberOfQuestions: number }) {
+  async createInterview(payload: { workspaceId: string; title?: string; description?: string; topic: string }) {
     try {
       return await authFetch(`${BASE_URL}/api/interview/create`, withJson({ method: 'POST', body: payload }));
     } catch (error) {

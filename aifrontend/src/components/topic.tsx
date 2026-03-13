@@ -57,6 +57,11 @@ export default function CreateInterviewModal({
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, [e.target.name]: value }));
+  };
+
 
   const handleSubmit = async () => {
     setError(null);
@@ -146,6 +151,7 @@ export default function CreateInterviewModal({
               type="text"
               placeholder="e.g., React, Node.js, Data Structures"
               value={formData.topic}
+              onChange={handleChange}
               className="w-full border border-slate-300 rounded-lg px-4 py-2.5 outline-blue-500 focus:ring-2 focus:ring-blue-200 transition"
               required
             />
@@ -161,6 +167,7 @@ export default function CreateInterviewModal({
               type="text"
               placeholder="Give your interview a custom title"
               value={formData.title}
+              onChange={handleChange}
               className="w-full border border-slate-300 rounded-lg px-4 py-2.5 outline-blue-500 focus:ring-2 focus:ring-blue-200 transition"
             />
           </div>
@@ -174,6 +181,7 @@ export default function CreateInterviewModal({
               name="description"
               placeholder="Add a description for this interview"
               value={formData.description}
+              onChange={handleChange}
               rows={3}
               className="w-full border border-slate-300 rounded-lg px-4 py-2.5 outline-blue-500 focus:ring-2 focus:ring-blue-200 transition resize-none"
             />

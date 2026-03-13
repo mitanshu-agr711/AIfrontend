@@ -7,6 +7,7 @@ import { GradientBackground } from "@/components/gradient-background";
 import { useAuthStore } from "@/stores/authStore";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { api } from "@/lib/api";
 
 const InterviewCompletePage = () => {
   const router = useRouter();
@@ -14,9 +15,18 @@ const InterviewCompletePage = () => {
 
   // Check authentication before allowing access
   useEffect(() => {
-    if (hydrated && !isAuthenticated) {
-      router.push('/register');
-    }
+    const init = async () => {
+      if (!hydrated) return;
+
+      if (!isAuthenticated) {
+        const restored = await api.restoreSession();
+        if (!restored) {
+          router.push('/register');
+        }
+      }
+    };
+
+    init();
   }, [hydrated, isAuthenticated, router]);
 
   return (

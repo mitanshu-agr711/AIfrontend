@@ -99,7 +99,7 @@ export default function Home() {
 
                       <button
                         onClick={() => {
-                          logout();
+                          // logout();    
                           setProfileOpen(false);
                         }}
                         className="w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
@@ -174,6 +174,7 @@ export default function Home() {
                   <button
                     className="flex items-center gap-3 px-6 py-2"
                     onClick={() => setProfileOpen(!profileOpen)}
+                    title="avatar"
                   >
                     <Image
                       src={user.avatar}

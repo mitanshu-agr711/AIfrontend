@@ -7,7 +7,7 @@ type CreateInterviewModalProps = {
   isOpen: boolean;
   onClose: () => void;
   workspaceId: string;
-  onSuccess?: (interview: any) => void;
+  onSuccess?: (interview: unknown) => void;
 };
 
 export default function CreateInterviewModal({ 
@@ -23,8 +23,6 @@ export default function CreateInterviewModal({
     title: '',
     description: '',
     topic: '',
-    difficulty: 'Medium',
-    numberOfQuestions: 5
   });
 
   const handleClose = useCallback(() => {
@@ -35,8 +33,7 @@ export default function CreateInterviewModal({
       title: '',
       description: '',
       topic: '',
-      difficulty: 'Medium',
-      numberOfQuestions: 5
+   
     });
   }, [onClose]);
 
@@ -61,7 +58,7 @@ export default function CreateInterviewModal({
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const value = e.target.name === 'numberOfQuestions' ? parseInt(e.target.value) || 1 : e.target.value;
+    const value = e.target.value;
     setFormData(prev => ({ ...prev, [e.target.name]: value }));
   };
 
@@ -86,8 +83,7 @@ export default function CreateInterviewModal({
         title: formData.title || undefined,
         description: formData.description || undefined,
         topic: formData.topic.trim(),
-        difficulty: formData.difficulty,
-        numberOfQuestions: formData.numberOfQuestions
+      
       };
 
       console.log('Creating interview with payload:', payload);
@@ -189,39 +185,7 @@ export default function CreateInterviewModal({
               className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-blue-500 focus:ring-2 focus:ring-blue-200 transition"
             />
           </div>
-
-          {/* Difficulty */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Difficulty
-            </label>
-            <select
-              name="difficulty"
-              value={formData.difficulty}
-              onChange={handleChange}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-blue-500 focus:ring-2 focus:ring-blue-200 transition bg-white cursor-pointer"
-            >
-              <option value="Easy">Easy</option>
-              <option value="Medium">Medium</option>
-              <option value="Hard">Hard</option>
-            </select>
-          </div>
-
-          {/* Number of Questions */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Number of Questions
-            </label>
-            <input
-              name="numberOfQuestions"
-              type="number"
-              min="1"
-              max="50"
-              value={formData.numberOfQuestions}
-              onChange={handleChange}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-blue-500 focus:ring-2 focus:ring-blue-200 transition"
-            />
-          </div>
+        
 
           {/* Submit Button */}
           <button

@@ -1,19 +1,16 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Share, Edit, BarChart3, ArrowRight, Plus, Trash2 } from 'lucide-react';
+import { Calendar, Share, Edit, ArrowRight, Plus, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { GradientBackground } from '@/components/gradient-background';
 import Link from 'next/link';
 import Image from 'next/image';
-// import { Navbar } from '@/components/navbar';
 import { useRouter } from 'next/navigation';
 import { Menu, PanelRightClose } from "lucide-react";
 import Logo from "@/components/lib/logo/page";
 import AuthModal from "@/components/AuthModal";
-
-
 
 interface Workspace {
   _id: string;
@@ -32,8 +29,6 @@ interface Toast {
 const InterviewGrid: React.FC = () => {
 
   const [profileOpen, setProfileOpen] = useState(false);
-  
-  
   
     const { isAuthenticated, user, hydrated } = useAuthStore();
 
@@ -57,10 +52,13 @@ const InterviewGrid: React.FC = () => {
         return;
       }
 
-      // Check authentication after hydration - only redirect if hydrated and not authenticated
-      if (hydrated && !isAuthenticated) {
-        router.push('/register');
-        return;
+      // Try silent session restore once before redirecting
+      if (!isAuthenticated) {
+        const restored = await api.restoreSession();
+        if (!restored) {
+          router.push('/register');
+          return;
+        }
       }
 
       // Don't fetch if not authenticated
@@ -214,8 +212,8 @@ const InterviewGrid: React.FC = () => {
 
           <ul className="hidden md:flex items-center space-x-6 text-lg font-medium">
             <li>
-              <a href="/about" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
-                About
+              <a href="/home" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
+                Home
               </a>
             </li>
             <li>
@@ -299,11 +297,11 @@ const InterviewGrid: React.FC = () => {
           <ul className="flex flex-col items-center space-y-3 text-lg font-medium">
             <li>
               <a
-                href="/about"
+                href="/home"
                 className="block px-6 py-2 rounded-full hover:bg-sky-100 hover:text-sky-600 dark:hover:bg-gray-800 w-full text-center"
                 onClick={() => setMenuOpen(false)}
               >
-                About
+                Home
               </a>
             </li>
             <li>
@@ -332,6 +330,7 @@ const InterviewGrid: React.FC = () => {
                   <button
                     onClick={() => setProfileOpen(!profileOpen)}
                     className="flex items-center gap-3 px-6 py-2"
+                    title="Avatar"
                   >
                     <Image
                       src={user.avatar}
@@ -490,7 +489,7 @@ const InterviewGrid: React.FC = () => {
                         className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors w-full justify-center"
                       >
                         <ArrowRight size={16} />
-                        Start Interview
+                        Create Interview
                       </Link>
                     </div>
                   )}
@@ -512,29 +511,11 @@ const InterviewGrid: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-slate-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400 font-medium">
-                    {new Date(workspace.createdAt).toLocaleDateString('en-US', { weekday: 'long' })}
-                  </span>
-                  <div className="flex items-center gap-3">
-                    <Link 
-                      href={`/workspace/${workspace._id}/analytics`}
-                      className="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium hover:bg-blue-100 transition-colors"
-                    >
-                      <BarChart3 size={12} />
-                      Analytics
-                    </Link>
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  </div>
-                </div>
-              </div>
+             
             </div>
           ))}
         </div>
       </div>
-      
-      
     </>
   );
 };
