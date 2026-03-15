@@ -29,7 +29,7 @@
     "react-icons": "^5.5.0",
     "react-player": "^2.16.0",
     "react-redux": "^9.2.0",
-    "recharts": "^2.15.3",
+    "recharts": "^3.8.0",
     "simplex-noise": "^4.0.3",
     "tailwind-merge": "^3.3.0",
     "taos": "^1.0.5",

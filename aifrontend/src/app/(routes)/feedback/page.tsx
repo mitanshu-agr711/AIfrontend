@@ -6,6 +6,15 @@ import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/authStore";
 import { GradientBackground } from "@/components/gradient-background";
 import { Loader2, Award, Clock3, CircleCheckBig, CircleX, TrendingUp, ListChecks } from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
 
 type UserAnalyticsResponse = {
   overall: {
@@ -79,6 +88,11 @@ const FeedbackPage = () => {
   const [selectedInterviewId, setSelectedInterviewId] = useState("");
   const [details, setDetails] = useState<InterviewDetailResponse | null>(null);
 
+
+
+
+
+
   useEffect(() => {
     const init = async () => {
       if (!hydrated) return;
@@ -140,6 +154,40 @@ const FeedbackPage = () => {
 
     return 0;
   }, [details]);
+
+
+const ScoreTrendGraph = ({ data }: { data: { label: string; score: number }[] }) => {
+  const memoizedData = useMemo(() => data || [], [data]);
+
+  return (
+    <div className="bg-white/95 rounded-2xl border border-slate-200 shadow p-6">
+      <h2 className="text-lg font-semibold text-slate-800 mb-4">
+        Score Trend (Recent Interviews)
+      </h2>
+
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={memoizedData}>
+          <CartesianGrid strokeDasharray="3 3" />
+
+          <XAxis dataKey="label" />
+
+          <YAxis domain={[0, 100]} />
+
+          <Tooltip />
+
+          <Line
+            type="monotone"
+            dataKey="score"
+            stroke="#3b82f6"
+            strokeWidth={3}
+            dot={{ r: 5 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
 
   const scoreTrend = useMemo(() => {
     if (!analytics?.recentInterviews?.length) return [];
@@ -238,24 +286,9 @@ const FeedbackPage = () => {
             </div>
           )}
 
-          {!!scoreTrend.length && (
-            <div className="bg-white/95 rounded-2xl border border-slate-200 shadow p-6">
-              <h2 className="text-lg font-semibold text-slate-800 mb-4">Score Trend (Recent Interviews)</h2>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {scoreTrend.map((point) => (
-                  <div key={point.id} className="rounded-xl border border-slate-200 p-3 bg-white">
-                    <div className="h-28 flex items-end">
-                      <div className="w-full bg-slate-100 rounded-md overflow-hidden">
-                        <div className={`bg-blue-500 transition-all duration-500 ${heightClassFromScore(point.score)}`} />
-                      </div>
-                    </div>
-                    <div className="mt-2 text-xs text-slate-500">{point.label}</div>
-                    <div className="text-sm font-semibold text-slate-800">{point.score}%</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        {!!scoreTrend.length && (
+   <ScoreTrendGraph data={scoreTrend} />
+)}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1 bg-white/95 rounded-2xl border border-slate-200 shadow p-5">

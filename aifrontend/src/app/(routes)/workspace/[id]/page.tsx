@@ -216,7 +216,7 @@ export default function WorkspaceDetailPage() {
                     </div>
                     <div className="flex items-center justify-between mt-3">
                       <Link
-                        href={`/workspace/${workspace._id}/analytics`}
+                        href={interview._id? `/feedback?interviewId=${interview._id}` : "/feedback"}
                         className="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium hover:bg-blue-100 transition-colors"
                       >
                         <BarChart3 size={12} />
