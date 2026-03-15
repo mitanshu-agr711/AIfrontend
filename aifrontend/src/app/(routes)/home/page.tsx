@@ -10,10 +10,13 @@ import { GradientBackground } from "@/components/gradient-background"
 import { useScrollTransform } from "@/components/image";
 import { useState } from "react";
 import { Menu, PanelRightClose } from "lucide-react";
+import { useRouter } from "next/navigation";
 import Logo from "@/components/lib/logo/page";
 import AuthModal from "@/components/AuthModal";
 import { useAuthStore } from "@/stores/authStore";
+import { api } from "@/lib/api";
 export default function Home() {
+  const router = useRouter();
 
   const [profileOpen, setProfileOpen] = useState(false);
 
@@ -41,6 +44,13 @@ export default function Home() {
   const [rightRef2, rightStyle2] = useScrollTransform({
     fromX: 120, toX: 0, fromRot: 18, toRot: 0
   }) as [React.RefObject<HTMLDivElement>, React.CSSProperties];
+
+  const handleLogout = async () => {
+    await api.logout();
+    setProfileOpen(false);
+    setMenuOpen(false);
+    router.replace("/register");
+  };
 
   // const { isUserLoggedIn } = useAuthStore();
 
@@ -77,7 +87,7 @@ export default function Home() {
                   {/* Avatar Button */}
                   <button
                     onClick={() => setProfileOpen(!profileOpen)}
-                    className="flex items-center gap-3 px-6 py-2"
+                    className="flex items-center gap-3 px-6 py-2 cursor-pointer"
                     title="User profile menu"
                   >
                     <Image
@@ -91,18 +101,16 @@ export default function Home() {
 
                   {/* Dropdown */}
                   {profileOpen && (
-                    <div className="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg border border-gray-200 py-2 z-50">
+                    <div className="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg border border-gray-300 py-2 z-50">
 
-                      <div className="px-4 py-2 text-gray-700 font-medium border-b">
-                        {user.name}
+                      <div className="px-4 py-2 text-gray-700 font-medium border-b hover:bg-sky-600 transition-all cursor-pointer
+                       hover:text-white">
+                        <Link href="/feedback">{user.name}</Link>
                       </div>
 
                       <button
-                        onClick={() => {
-                          // logout();    
-                          setProfileOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
                       >
                         Logout
                       </button>
@@ -172,7 +180,7 @@ export default function Home() {
 
                   {/* Avatar Button */}
                   <button
-                    className="flex items-center gap-3 px-6 py-2"
+                    className="flex items-center gap-3 px-6 py-2 cursor-pointer"
                     onClick={() => setProfileOpen(!profileOpen)}
                     title="avatar"
                   >
@@ -194,11 +202,8 @@ export default function Home() {
                       </div>
 
                       <button
-                        onClick={() => {
-                          // logout();
-                          setProfileOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
                       >
                         Logout
                       </button>
@@ -249,7 +254,7 @@ export default function Home() {
                   Start Interview <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" className="glass-button hover:bg-blue-500 cursor-pointer" asChild>
+              <Button size="lg" className="glass-button hover:bg-blue-600 cursor-pointer" asChild>
                 <Link href="/feedback">View Your Progress</Link>
               </Button>
             </div>
@@ -386,49 +391,3 @@ export default function Home() {
     </div>
   )
 }
-
-
-
-{/* Hero Section */ }
-{/* <section className="relative py-16 overflow-hidden">
-
-        <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
-          <FlickeringGrid
-            className="w-full h-full [mask-image:radial-gradient(450px_circle_at_center,white,transparent)]"
-            squareSize={4}
-            gridGap={6}
-            color="#60A5FA"
-            maxOpacity={0.5}
-            flickerChance={0.1}
-            width={size.width}
-            height={size.height}
-          />
-        </div>
-       
-        <div className="relative z-10 container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-8">
-            Welcome to the AI Interview Tool
-          </h1>
-          <div className="flex justify-center items-center mt-10 gap-0">
-            <div className="wave-hand">
-              <Image
-                src="/hand.png"
-                alt="Hand"
-                width={150}
-                height={300}
-                priority
-              />
-            </div>
-
-
-            <Image
-              src="/robot.png"
-              alt="Robot"
-              width={250}
-              height={500}
-              priority
-            />
-          </div>
-
-        </div>
-      </section> */}

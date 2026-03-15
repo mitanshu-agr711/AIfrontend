@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { ErrorToast } from "@/components/ErrorToast";
+import Footer from "@/components/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({
       >
         <ErrorToast />
         {children}
+        <Footer />
         <Script src="https://cdn.jsdelivr.net/npm/taos@latest/dist/taos.js" />
 
       </body>

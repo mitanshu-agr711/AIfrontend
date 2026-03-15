@@ -253,10 +253,14 @@ export const api = {
   // Auth logout - clears httpOnly cookies on backend
   async logout() {
     try {
+      const authHeaders = getAuthHeader();
       await fetch(`${BASE_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        }
       });
       useAuthStore.getState().logout();
     } catch (error) {

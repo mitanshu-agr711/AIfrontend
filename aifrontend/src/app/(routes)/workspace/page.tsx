@@ -40,8 +40,29 @@ const InterviewGrid: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState<string>('');
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const [toast, setToast] = useState<Toast | null>(null);
+
+  useEffect(() => {
+    if (!deleteConfirmId) {
+      return;
+    }
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (target instanceof Element && target.closest('[data-delete-popover="true"]')) {
+        return;
+      }
+      setDeleteConfirmId(null);
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [deleteConfirmId]);
 
   // Fetch workspaces on mount
   useEffect(() => {
@@ -147,13 +168,10 @@ const InterviewGrid: React.FC = () => {
   };
 
   const handleDelete = async (id: string): Promise<void> => {
-    if (!confirm('Are you sure you want to delete this workspace?')) {
-      return;
-    }
-
     try {
       await api.deleteWorkspace(id);
       setWorkspaces(workspaces.filter(w => w._id !== id));
+      setDeleteConfirmId(null);
       
       setToast({
         title: 'Workspace deleted',
@@ -221,11 +239,11 @@ const InterviewGrid: React.FC = () => {
                 Contact
               </a>
             </li>
-            <li>
+            {/* <li>
               <a href="#features" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
                 Features
               </a>
-            </li>
+            </li> */}
             <li>
               {hydrated && isAuthenticated && user ? (
                 <div className="relative">
@@ -313,7 +331,7 @@ const InterviewGrid: React.FC = () => {
                 Contact
               </a>
             </li>
-            <li>
+            {/* <li>
               <a
                 href="/feature"
                 className="block px-6 py-2 rounded-full hover:bg-sky-100 hover:text-sky-600 dark:hover:bg-gray-800 w-full text-center"
@@ -321,7 +339,7 @@ const InterviewGrid: React.FC = () => {
               >
                 Feature
               </a>
-            </li>
+            </li> */}
             <li>
               {hydrated && isAuthenticated && user ? (
                 <div className="relative">
@@ -435,18 +453,51 @@ const InterviewGrid: React.FC = () => {
                     </button>
                     <button
                       title="Edit"
-                      onClick={(e) => { e.stopPropagation(); handleEditStart(workspace); }}
+                      onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); handleEditStart(workspace); }}
                       className="bg-transparent border-none cursor-pointer p-1 hover:bg-blue-50 rounded"
                     >
                       <Edit color="#2563eb" size={16} />
                     </button>
-                    <button
-                      title="Delete"
-                      onClick={(e) => { e.stopPropagation(); handleDelete(workspace._id); }}
-                      className="bg-transparent border-none cursor-pointer p-1 hover:bg-red-50 rounded"
-                    >
-                      <Trash2 color="#ef4444" size={16} />
-                    </button>
+                    <div className="relative" data-delete-popover="true">
+                      <button
+                        title="Delete"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteConfirmId((current) => current === workspace._id ? null : workspace._id);
+                        }}
+                        className="bg-transparent border-none cursor-pointer p-1 hover:bg-red-50 rounded"
+                      >
+                        <Trash2 color="#ef4444" size={16} />
+                      </button>
+
+                      {deleteConfirmId === workspace._id && (
+                        <div className="absolute right-0 top-full z-30 mt-2 w-52 rounded-xl border border-red-200 bg-white p-3 shadow-[0_18px_40px_rgba(239,68,68,0.18)]">
+                          <p className="text-xs font-medium leading-5 text-slate-700">
+                            Delete this workspace?
+                          </p>
+                          <div className="mt-3 flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(workspace._id);
+                              }}
+                              className="flex-1 rounded-lg bg-red-500 px-3 py-2 text-xs font-semibold text-white transition-all hover:bg-red-600"
+                            >
+                              Delete
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteConfirmId(null);
+                              }}
+                              className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition-all hover:bg-slate-50"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
