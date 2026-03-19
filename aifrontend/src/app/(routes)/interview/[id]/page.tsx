@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import InterviewBot from '@/components/InterviewBot'
 import { Button } from '@/components/button'
@@ -52,8 +52,13 @@ const InterviewSessionPage = () => {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [finished, setFinished] = useState(false)
+  const [showEndConfirm, setShowEndConfirm] = useState(false)
+  const [fullscreenPrompt, setFullscreenPrompt] = useState(false)
+  const [fullscreenExitCount, setFullscreenExitCount] = useState(0)
 
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const interviewSubmittedRef = useRef(false)
+  const fullscreenExitCountRef = useRef(0)
 
   // Auth guard
   useEffect(() => {
@@ -122,28 +127,93 @@ const InterviewSessionPage = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatLog])
 
-    useEffect(() => {
-  if (timer === 0 && !finished) {
-    const autoSubmitInterview = async () => {
-      try {
-        setFinished(true)
+  const completeInterviewAndRedirect = useCallback(async (message?: string) => {
+    if (interviewSubmittedRef.current) return
 
-        setChatLog(prev => [
-          ...prev,
-          { role: 'bot', text: '⏰ Time is up! Submitting your interview automatically.' }
-        ])
+    interviewSubmittedRef.current = true
+    setFinished(true)
 
-        await api.completeInterview(interviewId)
-
-        router.push(`/interview-complete?interviewId=${interviewId}`)
-      } catch (err) {
-        console.error('Auto submit failed:', err)
-      }
+    if (message) {
+      setChatLog(prev => [...prev, { role: 'bot', text: message }])
     }
 
-    autoSubmitInterview()
+    try {
+      await api.completeInterview(interviewId)
+    } catch (err) {
+      console.error('Failed to complete interview:', err)
+    }
+
+    // EXIT FULLSCREEN HERE ↓
+    if (document.fullscreenElement) {
+      await document.exitFullscreen()
+    }
+
+    router.push(`/interview-complete?interviewId=${interviewId}`)
+  }, [interviewId, router])
+
+  const requestInterviewFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen()
+      }
+      setFullscreenPrompt(false)
+    } catch {
+      setFullscreenPrompt(true)
+    }
   }
-}, [timer, finished, interviewId, router])
+
+  useEffect(() => {
+    if (timer === 0 && !finished) {
+      void completeInterviewAndRedirect('Time is up! Submitting your interview automatically.')
+    }
+  }, [timer, finished])
+
+  useEffect(() => {
+    if (loadingInterview || !hydrated || !isAuthenticated) return
+
+    const timeout = setTimeout(() => {
+      void requestInterviewFullscreen()
+    }, 150)
+
+    return () => clearTimeout(timeout)
+  }, [loadingInterview, hydrated, isAuthenticated])
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const currentlyFullscreen = Boolean(document.fullscreenElement)
+
+      if (currentlyFullscreen) {
+        setFullscreenPrompt(false)
+        return
+      }
+
+      if (finished || interviewSubmittedRef.current) return
+
+      fullscreenExitCountRef.current += 1
+      setFullscreenExitCount(fullscreenExitCountRef.current)
+
+      if (fullscreenExitCountRef.current >= 2) {
+        void completeInterviewAndRedirect('Full screen was exited twice. Interview submitted automatically.')
+        return
+      }
+
+      setFullscreenPrompt(true)
+      setChatLog(prev => [
+        ...prev,
+        { role: 'bot', text: 'Please return to full screen mode to continue your interview.' },
+      ])
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [finished, completeInterviewAndRedirect])
+
+  useEffect(() => {
+    document.body.classList.add('interview-mode')
+    return () => {
+      document.body.classList.remove('interview-mode')
+    }
+  }, [])
 
   const formatTime = (seconds: number) => {
     const m = String(Math.floor(seconds / 60)).padStart(2, '0')
@@ -205,15 +275,14 @@ const InterviewSessionPage = () => {
       setIsSpeaking(true)
       setTimeout(async () => {
         setIsSpeaking(false)
-        try { await api.completeInterview(interviewId) } catch { /* ignore */ }
-        router.push(`/interview-complete?interviewId=${interviewId}`)
+        await completeInterviewAndRedirect()
       }, 2500)
     }
   }
 
   const handleEndInterview = async () => {
-    try { await api.completeInterview(interviewId) } catch { /* ignore */ }
-    router.push(`/interview-complete?interviewId=${interviewId}`)
+    setShowEndConfirm(false)
+    await completeInterviewAndRedirect('Interview ended by user.')
   }
 
   if (!hydrated || loadingInterview) {
@@ -249,12 +318,58 @@ const InterviewSessionPage = () => {
           {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </Button>
         <Button
-          onClick={handleEndInterview}
-          className="bg-red-500/90 backdrop-blur-sm hover:bg-red-600 text-white shadow-lg cursor-pointer"
+          onClick={() => setShowEndConfirm(true)}
+          className="bg-red-500/90 backdrop-blur-sm hover:bg-red-600 text-white shadowF-lg cursor-pointer"
         >
           End Interview
         </Button>
       </div>
+
+      {fullscreenPrompt && !finished && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-900/95 p-6 text-center shadow-2xl">
+            <h3 className="text-xl font-semibold text-white">Full screen required</h3>
+            <p className="mt-2 text-sm text-white/70">
+              Please return to full screen mode to continue this interview.
+            </p>
+            <p className="mt-2 text-xs text-amber-300">
+              Exit attempts: {fullscreenExitCount}/2
+            </p>
+            <Button
+              onClick={() => void requestInterviewFullscreen()}
+              className="mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Enter Full Screen
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {showEndConfirm && !finished && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-2xl">
+            <h3 className="text-xl font-semibold text-white text-center">Are you sure?</h3>
+            <p className="text-sm text-white/70 text-center mt-2">
+              Ending now will submit your interview and take you to the completion page.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <Button
+                onClick={() => setShowEndConfirm(false)}
+                variant="outline"
+                className="w-1/2 border-white/20 text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => void handleEndInterview()}
+                className="w-1/2 bg-red-500 hover:bg-red-600 text-white hover:cursor:pointer"
+              >
+                Yes, End
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex lg:flex-row flex-col min-h-screen">
 
@@ -358,4 +473,20 @@ const InterviewSessionPage = () => {
   )
 }
 
-export default InterviewSessionPage
+// Hide global footer while interview session page is active.
+const InterviewPageStyles = () => (
+  <style jsx global>{`
+    body.interview-mode #contact {
+      display: none !important;
+    }
+  `}</style>
+)
+
+export default function InterviewSessionPageWithStyles() {
+  return (
+    <>
+      <InterviewPageStyles />
+      <InterviewSessionPage />
+    </>
+  )
+}

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/authStore";
 import { GradientBackground } from "@/components/gradient-background";
-import { Loader2, Award, Clock3, CircleCheckBig, CircleX, TrendingUp, ListChecks } from "lucide-react";
+import { Loader2, Award, Clock3, CircleCheckBig, CircleX, TrendingUp, ListChecks, Menu, PanelRightClose } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -15,6 +15,12 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import Logo from "@/components/lib/logo/page";
+import AuthModal from "@/components/AuthModal";
+import Link from "next/link";
+import Image from "next/image";
+// import { ArrowRight } from "lucide-react";
+// import { api } from "@/lib/api";
 
 type UserAnalyticsResponse = {
   overall: {
@@ -76,18 +82,65 @@ type InterviewDetailResponse = {
   weakTopics: string[];
 };
 
+
+const ScoreTrendGraph = ({ data }: { data: { label: string; score: number }[] }) => {
+  const memoizedData = useMemo(() => data || [], [data]);
+
+  return (
+    <div className="bg-white/95 rounded-2xl border border-slate-200 shadow p-6">
+      <h2 className="text-lg font-semibold text-slate-800 mb-4">
+        Score Trend (Recent Interviews)
+      </h2>
+
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={memoizedData}>
+          <CartesianGrid strokeDasharray="3 3" />
+
+          <XAxis dataKey="label" />
+
+          <YAxis domain={[0, 100]} />
+
+          <Tooltip />
+
+          <Line
+            type="monotone"
+            dataKey="score"
+            stroke="#3b82f6"
+            strokeWidth={3}
+            dot={{ r: 5 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
 const FeedbackPage = () => {
+
+
   const router = useRouter();
+
+
+    const { isAuthenticated, user, hydrated } = useAuthStore();
+    const [profileOpen, setProfileOpen] = useState(false);
+
+   const handleLogout = async () => {
+      await api.logout();
+      setProfileOpen(false);
+      setMenuOpen(false);
+      router.replace("/register");
+    };
   const searchParams = useSearchParams();
   const interviewIdFromQuery = searchParams.get("interviewId") || "";
-  const { isAuthenticated, hydrated } = useAuthStore();
+
 
   const [loading, setLoading] = useState(true);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [analytics, setAnalytics] = useState<UserAnalyticsResponse | null>(null);
   const [selectedInterviewId, setSelectedInterviewId] = useState("");
   const [details, setDetails] = useState<InterviewDetailResponse | null>(null);
-
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
 
 
 
@@ -156,37 +209,7 @@ const FeedbackPage = () => {
   }, [details]);
 
 
-const ScoreTrendGraph = ({ data }: { data: { label: string; score: number }[] }) => {
-  const memoizedData = useMemo(() => data || [], [data]);
 
-  return (
-    <div className="bg-white/95 rounded-2xl border border-slate-200 shadow p-6">
-      <h2 className="text-lg font-semibold text-slate-800 mb-4">
-        Score Trend (Recent Interviews)
-      </h2>
-
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={memoizedData}>
-          <CartesianGrid strokeDasharray="3 3" />
-
-          <XAxis dataKey="label" />
-
-          <YAxis domain={[0, 100]} />
-
-          <Tooltip />
-
-          <Line
-            type="monotone"
-            dataKey="score"
-            stroke="#3b82f6"
-            strokeWidth={3}
-            dot={{ r: 5 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-};
 
 
   const scoreTrend = useMemo(() => {
@@ -227,16 +250,18 @@ const ScoreTrendGraph = ({ data }: { data: { label: string; score: number }[] })
     return "w-0";
   };
 
-  const heightClassFromScore = (score: number) => {
-    if (score >= 95) return "h-28";
-    if (score >= 85) return "h-24";
-    if (score >= 75) return "h-20";
-    if (score >= 65) return "h-16";
-    if (score >= 50) return "h-12";
-    if (score >= 35) return "h-10";
-    if (score >= 20) return "h-8";
-    return "h-6";
-  };
+  const hasNoInterviews = (analytics?.overall?.totalInterviews || 0) === 0;
+
+  // const heightClassFromScore = (score: number) => {
+  //   if (score >= 95) return "h-28";
+  //   if (score >= 85) return "h-24";
+  //   if (score >= 75) return "h-20";
+  //   if (score >= 65) return "h-16";
+  //   if (score >= 50) return "h-12";
+  //   if (score >= 35) return "h-10";
+  //   if (score >= 20) return "h-8";
+  //   return "h-6";
+  // };
 
   if (!hydrated || loading) {
     return (
@@ -252,16 +277,230 @@ const ScoreTrendGraph = ({ data }: { data: { label: string; score: number }[] })
     );
   }
 
+  if (hasNoInterviews) {
+    return (
+      <>
+        <GradientBackground />
+        <div className="min-h-screen p-6 md:p-8 mt-[6rem] flex items-center justify-center">
+          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white/95 p-10 shadow-xl text-center">
+            <h1 className="text-4xl font-bold text-slate-800">Oops!</h1>
+            <p className="mt-3 text-lg text-slate-600">
+              You did not give any interview yet.
+            </p>
+            <p className="mt-1 text-slate-500">
+              Go to your workspace and start your first interview to see feedback here.
+            </p>
+            <Link
+              href="/workspace"
+              className="mt-6 inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition-all hover:bg-blue-700"
+            >
+              Go to Workspace
+            </Link>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  console.log("user",{user})
   return (
     <>
+  
+      <nav className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-[90%] md:w-3/4 lg:w-1/2 rounded-full shadow-xl border border-white/20 backdrop-blur-lg bg-white/70 transition-all cursor-pointer">
+        <div className="flex items-center justify-between px-6 py-3">
+          <div className="flex items-center space-x-4">
+            <Logo />
+          </div>
+
+          <ul className="hidden md:flex items-center space-x-6 text-lg font-medium">
+            <li>
+              <a href="/home" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
+                Home
+              </a>
+            </li>
+            <li>
+              <a href="/about" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
+                About
+              </a>
+            </li>
+            <li>
+              <a href="#contact" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
+                Contact Us
+              </a>
+            </li>
+            {/* <li>
+              <a href="#features" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
+                Features
+              </a>
+            </li> */}
+            <li>
+              {hydrated && isAuthenticated && user ? (
+                <div className="relative">
+
+                  {/* Avatar Button */}
+                  <button
+                    onClick={() => setProfileOpen(!profileOpen)}
+                    className="flex items-center gap-3 px-6 py-2 cursor-pointer"
+                    title="User profile menu"
+                  >
+                    <Image
+                      src={user.avatar}
+                      alt={user.name}
+                      width={40}
+                      height={40}
+                      className="rounded-full border-2 border-sky-500"
+                    />
+                  </button>
+
+                  {/* Dropdown */}
+                  {profileOpen && (
+                    <div className="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg border border-gray-300 py-2 z-50">
+
+                      <div className="px-4 py-2 text-gray-700 font-medium border-b hover:bg-sky-600 transition-all cursor-pointer
+                       hover:text-white">
+                        <Link href="/feedback">{user.name}</Link>
+                      </div>
+
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
+                      >
+                        Logout
+                      </button>
+
+                    </div>
+                  )}
+
+                </div>
+              ) : (
+                <button
+                  className="bg-gradient-to-r from-sky-500 to-blue-500 text-white px-6 py-2 rounded-full shadow-md hover:from-sky-600 hover:to-blue-600 transition-all cursor-pointer"
+                  onClick={() => {
+                    setShowAuth(true);
+                    setMenuOpen(false);
+                  }}
+                >
+                  Register
+                </button>
+              )}
+            </li>
+          </ul>
+
+          <button
+            className="md:hidden text-sky-700 dark:text-sky-300 p-2 rounded-full hover:bg-sky-100 dark:hover:bg-gray-800 transition-all"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-label="Toggle navigation menu"
+          >
+            {menuOpen ? <PanelRightClose size={32} /> : <Menu size={32} />}
+          </button>
+        </div>
+
+        <div
+          className={`md:hidden absolute left-0 right-0 top-full bg-white/90 dark:bg-gray-900/90 shadow-xl rounded-b-3xl transition-all duration-300 overflow-hidden ${menuOpen ? "max-h-60 py-4" : "max-h-0 py-0"
+            }`}
+        >
+          <ul className="flex flex-col items-center space-y-3 text-lg font-medium">
+            <li>
+              <a href="/home" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
+               Home
+              </a>
+            </li>
+            <li>
+              <a
+                href="/about"
+                className="block px-6 py-2 rounded-full hover:bg-sky-100 hover:text-sky-600 dark:hover:bg-gray-800 w-full text-center"
+                onClick={() => setMenuOpen(false)}
+              >
+                About
+              </a>
+            </li>
+            <li>
+              <a
+                href="#contact"
+                className="block px-6 py-2 rounded-full hover:bg-sky-100 hover:text-sky-600 dark:hover:bg-gray-800 w-full text-center"
+                onClick={() => setMenuOpen(false)}
+              >
+                Contact Us
+              </a>
+            </li>
+            {/* <li>
+              <ature
+                href="/feature"
+                className="block px-6 py-2 rounded-full hover:bg-sky-100 hover:text-sky-600 dark:hover:bg-gray-800 w-full text-center"
+                onClick={() => setMenuOpen(false)}
+              >
+                Feature
+              </a>
+            </li> */}
+            <li>
+              {hydrated && isAuthenticated && user ? (
+                <div className="relative">
+
+                  {/* Avatar Button */}
+                  <button
+                    className="flex items-center gap-3 px-6 py-2 cursor-pointer"
+                    onClick={() => setProfileOpen(!profileOpen)}
+                    title="avatar"
+                  >
+                    <Image
+                      src={user.avatar}
+                      alt={user.name}
+                      width={40}
+                      height={40}
+                      className="rounded-full border-2 border-sky-500"
+                    />
+                  </button>
+
+                  {/* Dropdown */}
+                  {profileOpen && (
+                    <div className="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg border border-gray-200 py-2 z-50">
+
+                      <div className="px-4 py-2 text-gray-700 font-medium border-b">
+                        {user.name}
+                      </div>
+
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
+                      >
+                        Logout
+                      </button>
+
+                    </div>
+                  )}
+
+                </div>
+              ) : (
+                <button
+                  className="bg-gradient-to-r from-sky-500 to-blue-500 text-white px-6 py-2 rounded-full shadow-md hover:from-sky-600 hover:to-blue-600 transition-all cursor-pointer"
+                  onClick={() => {
+                    setShowAuth(true);
+                    setMenuOpen(false);
+                  }}
+                >
+                  Register
+                </button>
+              )}
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <AuthModal
+        isOpen={showAuth}
+        onClose={() => setShowAuth(false)}
+        mode="modal"
+      />
       <GradientBackground />
-      <div className="min-h-screen p-6 md:p-8">
+      <div className="min-h-screen p-6 md:p-8  mb-5 mt-[6rem]">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="bg-white/95 rounded-2xl border border-slate-200 shadow-lg p-6">
-            <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-slate-800">Hi !</h2>
+          {user && <h1 className="text-3xl font-bold text-blue-400">{user.name}</h1>} 
+         
+            <h4 className="text-xl font-bold text-slate-800 flex items-center gap-3">
               <Award className="w-8 h-8 text-blue-600" />
               Feedback & Analytics Dashboard
-            </h1>
+            </h4>
             <p className="text-slate-600 mt-2">Real performance insights from your completed interviews.</p>
           </div>
 

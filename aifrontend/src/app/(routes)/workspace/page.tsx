@@ -235,7 +235,7 @@ const InterviewGrid: React.FC = () => {
               </a>
             </li>
             <li>
-              <a href="/contact" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
+              <a href="#contact" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
                 Contact
               </a>
             </li>
@@ -324,7 +324,7 @@ const InterviewGrid: React.FC = () => {
             </li>
             <li>
               <a
-                href="/contact"
+                href="#contact"
                 className="block px-6 py-2 rounded-full hover:bg-sky-100 hover:text-sky-600 dark:hover:bg-gray-800 w-full text-center"
                 onClick={() => setMenuOpen(false)}
               >
