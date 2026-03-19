@@ -353,7 +353,7 @@ const FeedbackPage = () => {
                   </button>
 
                   {/* Dropdown */}
-                  {profileOpen && (
+                 {profileOpen && (
                     <div className="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg border border-gray-300 py-2 z-50">
 
                       <div className="px-4 py-2 text-gray-700 font-medium border-b hover:bg-sky-600 transition-all cursor-pointer
@@ -453,10 +453,11 @@ const FeedbackPage = () => {
 
                   {/* Dropdown */}
                   {profileOpen && (
-                    <div className="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg border border-gray-200 py-2 z-50">
+                    <div className="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg border border-gray-300 py-2 z-50">
 
-                      <div className="px-4 py-2 text-gray-700 font-medium border-b">
-                        {user.name}
+                      <div className="px-4 py-2 text-gray-700 font-medium border-b hover:bg-sky-600 transition-all cursor-pointer
+                       hover:text-white">
+                        <Link href="/feedback">{user.name}</Link>
                       </div>
 
                       <button

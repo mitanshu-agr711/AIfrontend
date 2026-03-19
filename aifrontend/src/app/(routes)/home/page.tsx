@@ -25,8 +25,8 @@ export default function Home() {
 
 
   const { isAuthenticated, user, hydrated } = useAuthStore();
-  console.log("User:", user);
-  console.log("User Avatar:", user?.avatar);
+  // console.log("User:", user);
+  // console.log("User Avatar:", user?.avatar);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(false);

@@ -44,6 +44,13 @@ const InterviewGrid: React.FC = () => {
 
   const [toast, setToast] = useState<Toast | null>(null);
 
+  const handleLogout = async () => {
+    await api.logout();
+    setProfileOpen(false);
+    setMenuOpen(false);
+    router.replace("/register");
+  };
+
   useEffect(() => {
     if (!deleteConfirmId) {
       return;
@@ -264,19 +271,17 @@ const InterviewGrid: React.FC = () => {
                   </button>
 
                   {/* Dropdown */}
-                  {profileOpen && (
-                    <div className="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg border border-gray-200 py-2 z-50">
+            {profileOpen && (
+                    <div className="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg border border-gray-300 py-2 z-50">
 
-                      <div className="px-4 py-2 text-gray-700 font-medium border-b">
-                        {user.name}
+                      <div className="px-4 py-2 text-gray-700 font-medium border-b hover:bg-sky-600 transition-all cursor-pointer
+                       hover:text-white">
+                        <Link href="/feedback">{user.name}</Link>
                       </div>
 
                       <button
-                        onClick={() => {
-                          // logout();
-                          setProfileOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
                       >
                         Logout
                       </button>
@@ -361,18 +366,16 @@ const InterviewGrid: React.FC = () => {
 
                   {/* Dropdown */}
                   {profileOpen && (
-                    <div className="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg border border-gray-200 py-2 z-50">
+                    <div className="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg border border-gray-300 py-2 z-50">
 
-                      <div className="px-4 py-2 text-gray-700 font-medium border-b">
-                        {user.name}
+                      <div className="px-4 py-2 text-gray-700 font-medium border-b hover:bg-sky-600 transition-all cursor-pointer
+                       hover:text-white">
+                        <Link href="/feedback">{user.name}</Link>
                       </div>
 
                       <button
-                        onClick={() => {
-                          // logout();
-                          setProfileOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
                       >
                         Logout
                       </button>
@@ -561,9 +564,7 @@ const InterviewGrid: React.FC = () => {
                   </div>
                 </div>
               </div>
-
-             
-            </div>
+               </div>
           ))}
         </div>
       </div>
