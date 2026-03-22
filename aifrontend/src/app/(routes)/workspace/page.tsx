@@ -17,6 +17,8 @@ interface Workspace {
   title: string;
   Interviews: string[];
   createdBy: string;
+  isShared?: boolean;
+  shareToken?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -29,10 +31,10 @@ interface Toast {
 const InterviewGrid: React.FC = () => {
 
   const [profileOpen, setProfileOpen] = useState(false);
-  
-    const { isAuthenticated, user, hydrated } = useAuthStore();
 
-   const [menuOpen, setMenuOpen] = useState(false);
+  const { isAuthenticated, user, hydrated } = useAuthStore();
+
+  const [menuOpen, setMenuOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const router = useRouter();
 
@@ -122,7 +124,7 @@ const InterviewGrid: React.FC = () => {
 
     try {
       const result = await api.createWorkspace('New Workspace') as { success: boolean; workspace: Workspace };
-      
+
       if (result.workspace) {
         setWorkspaces([result.workspace, ...workspaces]);
         setEditingId(result.workspace._id);
@@ -150,14 +152,14 @@ const InterviewGrid: React.FC = () => {
 
     try {
       await api.renameWorkspace(id, editTitle.trim());
-      
+
       const updated = workspaces.map((w) =>
         w._id === id ? { ...w, title: editTitle.trim() } : w
       );
       setWorkspaces(updated);
       setEditingId(null);
       setEditTitle('');
-      
+
       setToast({
         title: 'Workspace updated',
         description: 'Workspace title has been successfully updated.',
@@ -179,7 +181,7 @@ const InterviewGrid: React.FC = () => {
       await api.deleteWorkspace(id);
       setWorkspaces(workspaces.filter(w => w._id !== id));
       setDeleteConfirmId(null);
-      
+
       setToast({
         title: 'Workspace deleted',
         description: 'Workspace has been successfully deleted.',
@@ -191,28 +193,73 @@ const InterviewGrid: React.FC = () => {
     }
   };
 
-  const handleShare = (workspace: Workspace): void => {
-    const shareText = `Workspace: ${workspace.title} - ${workspace.Interviews?.length || 0} interviews`;
+  const handleShare = async (workspace: Workspace): Promise<void> => {
+    try {
+      if (!workspace.isShared || !workspace.shareToken) {
+        const result = await api.shareWorkspace(workspace._id) as {
+          shareToken?: string;
+          shareLink?: string;
+        };
 
-    navigator.clipboard.writeText(shareText);
+        const token = result.shareToken || workspace.shareToken || '';
+        const fallbackShareUrl = token ? `${window.location.origin}/workspace/shared/${token}` : '';
+        const shareUrl = result.shareLink
+          ? `${window.location.origin}${result.shareLink}`
+          : fallbackShareUrl;
 
-    setToast({
-      title: 'Copied to clipboard',
-      description: 'Workspace details have been copied to your clipboard.',
-    });
-    setTimeout(() => setToast(null), 2000);
-    
-    if (navigator.share) {
-      navigator.share({ title: 'Workspace Details', text: shareText }).catch((err) => {
-        console.error('Share failed:', err);
+        if (shareUrl) {
+          await navigator.clipboard.writeText(shareUrl);
+        }
+
+        setWorkspaces((prev) =>
+          prev.map((w) =>
+            w._id === workspace._id
+              ? { ...w, isShared: true, shareToken: token || w.shareToken || null }
+              : w
+          )
+        );
+
+        setToast({
+          title: 'Workspace shared',
+          description: shareUrl ? 'Share link copied to clipboard.' : 'Workspace sharing enabled.',
+        });
+        setTimeout(() => setToast(null), 2500);
+
+        if (navigator.share && shareUrl) {
+          navigator
+            .share({
+              title: workspace.title,
+              text: 'Join my AI interview workspace',
+              url: shareUrl,
+            })
+            .catch((err) => {
+              console.error('Share failed:', err);
+            });
+        }
+        return;
+      }
+
+      await api.unshareWorkspace(workspace._id);
+      setWorkspaces((prev) =>
+        prev.map((w) =>
+          w._id === workspace._id ? { ...w, isShared: false, shareToken: null } : w
+        )
+      );
+
+      setToast({
+        title: 'Workspace unshared',
+        description: 'Share link has been disabled.',
       });
+      setTimeout(() => setToast(null), 2500);
+    } catch (err) {
+      console.error('Error updating share status:', err);
     }
   };
 
   if (!hydrated || loading) {
     return (
       <>
-       
+
         <GradientBackground />
         <div className="rounded-lg p-5 mb-5 mt-10">
           <h1 className="font-bold text-[3rem] sm:text-[5rem] lg:text-[5rem] text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-blue-500 m-5 flex justify-center items-center">
@@ -229,7 +276,7 @@ const InterviewGrid: React.FC = () => {
   return (
     <>
 
-       <nav className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-[90%] md:w-3/4 lg:w-1/2 rounded-full shadow-xl border border-white/20 backdrop-blur-lg bg-white/70 transition-all cursor-pointer">
+      <nav className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-[90%] md:w-3/4 lg:w-1/2 rounded-full shadow-xl border border-white/20 backdrop-blur-lg bg-white/70 transition-all cursor-pointer">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center space-x-4">
             <Logo />
@@ -261,17 +308,17 @@ const InterviewGrid: React.FC = () => {
                     className="flex items-center gap-3 px-6 py-2"
                     title="Open profile menu"
                   >
-                  <Image
+                    <Image
                       src={user.avatar}
                       alt={user.name}
                       width={40}
                       height={40}
                       className="rounded-full border-2 border-sky-500"
-                     />
+                    />
                   </button>
 
                   {/* Dropdown */}
-            {profileOpen && (
+                  {profileOpen && (
                     <div className="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg border border-gray-300 py-2 z-50">
 
                       <div className="px-4 py-2 text-gray-700 font-medium border-b hover:bg-sky-600 transition-all cursor-pointer
@@ -410,7 +457,7 @@ const InterviewGrid: React.FC = () => {
           WORKSPACE
         </h1>
       </div>
-      
+
       <div>
         {toast && (
           <div className="fixed top-5 right-5 bg-blue-600 text-white px-4 py-2.5 rounded-lg z-50 shadow-lg">
@@ -420,8 +467,8 @@ const InterviewGrid: React.FC = () => {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 m-5">
-          
-          <div 
+
+          <div
             onClick={handleAddNew}
             className="group cursor-pointer bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center min-h-[250px] hover:border-blue-500 hover:bg-blue-50 transition-all duration-300"
           >
@@ -448,11 +495,14 @@ const InterviewGrid: React.FC = () => {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      title="Share"
-                      onClick={(e) => { e.stopPropagation(); handleShare(workspace); }}
+                      title={workspace.isShared ? 'Unshare Workspace' : 'Share Workspace'}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleShare(workspace);
+                      }}
                       className="bg-transparent border-none cursor-pointer p-1 hover:bg-blue-50 rounded"
                     >
-                      <Share color="#2563eb" size={16} />
+                      <Share color={workspace.isShared ? '#059669' : '#2563eb'} size={16} />
                     </button>
                     <button
                       title="Edit"
@@ -538,7 +588,7 @@ const InterviewGrid: React.FC = () => {
                       <h3 className="font-semibold text-slate-800 text-lg leading-tight line-clamp-2 min-h-[3.5rem]">
                         {workspace.title}
                       </h3>
-                      <Link 
+                      <Link
                         href={`/workspace/${workspace._id}`}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors w-full justify-center"
                       >
@@ -547,7 +597,7 @@ const InterviewGrid: React.FC = () => {
                       </Link>
                     </div>
                   )}
-                  
+
                   <div className="space-y-1 mt-4">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-500 font-medium">Created</span>
@@ -564,7 +614,7 @@ const InterviewGrid: React.FC = () => {
                   </div>
                 </div>
               </div>
-               </div>
+            </div>
           ))}
         </div>
       </div>

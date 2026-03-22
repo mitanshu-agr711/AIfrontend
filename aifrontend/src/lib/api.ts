@@ -19,6 +19,28 @@ interface BackendAuthResponse {
   message?: string;
 }
 
+type ApiWorkspace = {
+  _id?: string;
+  id?: string;
+  title: string;
+  Interviews?: string[];
+  interviews?: string[];
+  createdBy: string;
+  isShared?: boolean;
+  shareToken?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type ApiInterview = {
+  _id?: string;
+  id?: string;
+  title?: string;
+  topic: string;
+  status?: string;
+  createdAt: string;
+};
+
 const withJson = (init?: JsonInit) => {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -49,6 +71,20 @@ async function handle<T>(res: Response): Promise<T> {
   }
   return data as T;
 }
+
+const normalizeWorkspace = (workspace: ApiWorkspace) => ({
+  ...workspace,
+  _id: workspace._id || workspace.id || '',
+  Interviews: workspace.Interviews || workspace.interviews || [],
+  isShared: Boolean(workspace.isShared),
+  shareToken: workspace.shareToken || null,
+});
+
+const normalizeInterview = (interview: ApiInterview) => ({
+  ...interview,
+  _id: interview._id || interview.id || '',
+  status: interview.status || 'not-started',
+});
 
 // Flag to prevent multiple refresh attempts
 let isRefreshing = false;
@@ -92,13 +128,13 @@ async function refreshAccessToken(): Promise<string> {
       // Update access token in store
       useAuthStore.getState().updateAccessToken(data.accessToken);
       
-      console.log('✅ Token refreshed successfully');
-      console.log('🔑 New token (first 20 chars):', data.accessToken.substring(0, 20) + '...');
+      // console.log('✅ Token refreshed successfully');
+      // console.log('🔑 New token (first 20 chars):', data.accessToken.substring(0, 20) + '...');
       
       return data.accessToken;
 
     } catch (error) {
-      console.error('❌ Token refresh failed:', error);
+      // console.error('❌ Token refresh failed:', error);
       
       // Refresh token expired or invalid - logout user
       useAuthStore.getState().logout();
@@ -227,12 +263,12 @@ export const api = {
       const res = await fetch(`${BASE_URL}/auth/login`, withJson({ method: 'POST', body: payload }));
       const data = await handle<BackendAuthResponse>(res);
       
-      console.log('✅ Login successful');
-      console.log('📦 Backend response:', { 
-        hasToken: !!data.accessToken, 
-        tokenPreview: data.accessToken?.substring(0, 20) + '...',
-        user: data.user 
-      });
+      // console.log('✅ Login successful');
+      // console.log('📦 Backend response:', { 
+      //   hasToken: !!data.accessToken, 
+      //   tokenPreview: data.accessToken?.substring(0, 20) + '...',
+      //   user: data.user 
+      // });
       
       return {
         token: data.accessToken,
@@ -273,7 +309,16 @@ export const api = {
   // Workspace - with auto token refresh
   async createWorkspace(title: string) {
     try {
-      return await authFetch(`${BASE_URL}/api/workspace/create`, withJson({ method: 'POST', body: { title } }));
+      const result = await authFetch<{ success?: boolean; workspace?: ApiWorkspace }>(
+        `${BASE_URL}/api/workspace/create`,
+        withJson({ method: 'POST', body: { title } })
+      );
+
+      if (!result.workspace) return result;
+      return {
+        ...result,
+        workspace: normalizeWorkspace(result.workspace),
+      };
     } catch (error) {
       handleError(error);
       throw error;
@@ -297,7 +342,11 @@ export const api = {
   },
   async getWorkspaces() {
     try {
-      return await authFetch(`${BASE_URL}/api/workspace`);
+      const result = await authFetch<{ workspaces?: ApiWorkspace[] }>(`${BASE_URL}/api/workspace`);
+      return {
+        ...result,
+        workspaces: (result.workspaces || []).map(normalizeWorkspace),
+      };
     } catch (error) {
       // If 404, it means no workspaces exist yet - return empty array (don't show error toast)
       if (error instanceof AppError && error.statusCode === 404) {
@@ -310,7 +359,67 @@ export const api = {
   },
   async getWorkspaceById(id: string) {
     try {
-      return await authFetch(`${BASE_URL}/api/workspace/${id}`);
+      const result = await authFetch<{ workspace?: ApiWorkspace }>(`${BASE_URL}/api/workspace/${id}`);
+      if (!result.workspace) return result;
+      return {
+        ...result,
+        workspace: normalizeWorkspace(result.workspace),
+      };
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
+  },
+  async shareWorkspace(id: string) {
+    try {
+      return await authFetch<{ success?: boolean; isShared?: boolean; shareToken?: string; shareLink?: string }>(
+        `${BASE_URL}/api/workspace/${id}/share`,
+        withJson({ method: 'POST' })
+      );
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
+  },
+  async unshareWorkspace(id: string) {
+    try {
+      return await authFetch<{ success?: boolean; isShared?: boolean; shareToken?: string | null }>(
+        `${BASE_URL}/api/workspace/${id}/unshare`,
+        withJson({ method: 'POST' })
+      );
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
+  },
+  async getSharedWorkspace(token: string) {
+    try {
+      const res = await fetch(`${BASE_URL}/api/workspace/shared/${token}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const result = await handle<{
+        workspace?: (ApiWorkspace & { interviews?: ApiInterview[]; Interviews?: ApiInterview[] });
+        interviews?: ApiInterview[];
+        Interviews?: ApiInterview[];
+      }>(res);
+
+      const rawInterviews =
+        result.interviews ||
+        result.Interviews ||
+        result.workspace?.interviews ||
+        result.workspace?.Interviews ||
+        [];
+
+      const normalizedInterviews = rawInterviews
+        .filter((item): item is ApiInterview => typeof item === 'object' && item !== null)
+        .map(normalizeInterview);
+
+      return {
+        ...result,
+        workspace: result.workspace ? normalizeWorkspace(result.workspace) : undefined,
+        interviews: normalizedInterviews,
+      };
     } catch (error) {
       handleError(error);
       throw error;
@@ -360,7 +469,11 @@ export const api = {
   },
   async getWorkspaceInterviews(workspaceId: string) {
     try {
-      return await authFetch(`${BASE_URL}/api/interview/workspace/${workspaceId}`);
+      const result = await authFetch<{ interviews?: ApiInterview[] }>(`${BASE_URL}/api/interview/workspace/${workspaceId}`);
+      return {
+        ...result,
+        interviews: (result.interviews || []).map(normalizeInterview),
+      };
     } catch (error) {
       handleError(error);
       throw error;

@@ -42,6 +42,7 @@ const InterviewSessionPage = () => {
   const [userAnswer, setUserAnswer] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [loadingInterview, setLoadingInterview] = useState(true)
+  const [startError, setStartError] = useState<string | null>(null)
   const [startTime, setStartTime] = useState<number>(Date.now())
 
   const [showBlur, setShowBlur] = useState(true)
@@ -74,15 +75,48 @@ const InterviewSessionPage = () => {
 
   // Start interview on mount
   useEffect(() => {
-    if (!hydrated || !isAuthenticated || !interviewId) return
+    if (!hydrated || !interviewId) return
 
     const startInterview = async () => {
       try {
         setLoadingInterview(true)
-        const result = await api.startInterview(interviewId) as {
+        setStartError(null)
+
+        const runStart = async () => {
+          return await api.startInterview(interviewId) as {
+            interview: InterviewInfo
+            questions: Question[]
+          }
+        }
+
+        let result: {
           interview: InterviewInfo
           questions: Question[]
         }
+
+        try {
+          result = await runStart()
+        } catch (firstErr) {
+          const statusCode =
+            typeof firstErr === 'object' &&
+            firstErr !== null &&
+            'statusCode' in firstErr &&
+            typeof (firstErr as { statusCode?: unknown }).statusCode === 'number'
+              ? ((firstErr as { statusCode: number }).statusCode)
+              : undefined
+
+          if (statusCode === 401 || statusCode === 403) {
+            const restored = await api.restoreSession()
+            if (!restored) {
+              router.push(`/register?next=/interview/${interviewId}`)
+              return
+            }
+            result = await runStart()
+          } else {
+            throw firstErr
+          }
+        }
+
         setInterviewInfo(result.interview)
         const normalizedQuestions = (result.questions || []).map((q) => ({
           ...q,
@@ -96,13 +130,18 @@ const InterviewSessionPage = () => {
         }
       } catch (err) {
         console.error('Failed to start interview:', err)
+        const message =
+          typeof err === 'object' && err !== null && 'message' in err
+            ? String((err as { message?: string }).message || 'Unable to start this interview.')
+            : 'Unable to start this interview.'
+        setStartError(message)
       } finally {
         setLoadingInterview(false)
       }
     }
 
     startInterview()
-  }, [hydrated, isAuthenticated, interviewId])
+  }, [hydrated, interviewId, router])
 
   // Countdown blur
   useEffect(() => {
@@ -166,7 +205,7 @@ const InterviewSessionPage = () => {
     if (timer === 0 && !finished) {
       void completeInterviewAndRedirect('Time is up! Submitting your interview automatically.')
     }
-  }, [timer, finished])
+  }, [timer, finished, completeInterviewAndRedirect])
 
   useEffect(() => {
     if (loadingInterview || !hydrated || !isAuthenticated) return
@@ -290,6 +329,23 @@ const InterviewSessionPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-12 h-12 text-white animate-spin" />
         <p className="text-white/70 text-lg">Preparing your interview...</p>
+      </div>
+    )
+  }
+
+  if (startError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6">
+        <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-slate-900/85 p-8 text-center shadow-2xl">
+          <h1 className="text-2xl font-bold text-white">Unable to start interview</h1>
+          <p className="mt-3 text-white/70">{startError}</p>
+          <Button
+            onClick={() => router.push('/workspace')}
+            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Back to Workspace
+          </Button>
+        </div>
       </div>
     )
   }

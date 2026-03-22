@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { X, ChevronDown, Check } from 'lucide-react';
 import Image from 'next/image';
 import { api } from '@/lib/api';
@@ -19,6 +19,7 @@ export default function AuthModal({
   mode = 'modal' 
 }: AuthModalProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +36,10 @@ export default function AuthModal({
   const [images, setImages] = useState<string[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+
+  const requestedNext = searchParams.get('next');
+  const safeNextPath = requestedNext && requestedNext.startsWith('/') ? requestedNext : null;
+  const postAuthRedirectPath = safeNextPath || '/workspace';
 
   const toggleAuth = () => {
     setIsLogin(!isLogin);
@@ -146,7 +151,7 @@ export default function AuthModal({
         ? await api.login({ username: formData.username, password: formData.password })
         : await api.register(formData);
 
-      console.log('Auth result:', result); // Debug log
+    
      
       if (result.token && result.user) {
         setAuth(result.token, result.user);
@@ -155,8 +160,8 @@ export default function AuthModal({
         // This prevents race conditions where the workspace page loads before auth state is persisted
         setTimeout(() => {
           console.log(isLogin ? 'Logged in successfully' : 'Registered successfully');
-          console.log('Navigating to workspace...'); // Debug log
-          router.push('/workspace');
+          console.log('Navigating after auth...'); // Debug log
+          router.push(postAuthRedirectPath);
           
           // Close modal if in modal mode
           if (mode === 'modal') {

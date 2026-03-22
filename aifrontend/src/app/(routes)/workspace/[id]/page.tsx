@@ -59,7 +59,7 @@ export default function WorkspaceDetailPage() {
     try {
       setLoading(true);
 
-      const workspaceResult = await api.getWorkspaceById(workspaceId) as { workspace: WorkspaceDetail };
+      const workspaceResult = await api.getWorkspaceById(workspaceId) as unknown as { workspace: WorkspaceDetail };
       if (workspaceResult.workspace) {
         setWorkspace(workspaceResult.workspace);
       }
