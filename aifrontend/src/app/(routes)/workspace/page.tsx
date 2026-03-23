@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Share, Edit, ArrowRight, Plus, Trash2 } from 'lucide-react';
+import { Calendar, Share, Edit, ArrowRight, Plus, Trash2,  CircleX } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { GradientBackground } from '@/components/gradient-background';
@@ -193,56 +193,17 @@ const InterviewGrid: React.FC = () => {
     }
   };
 
-  const handleShare = async (workspace: Workspace): Promise<void> => {
-    try {
-      if (!workspace.isShared || !workspace.shareToken) {
-        const result = await api.shareWorkspace(workspace._id) as {
-          shareToken?: string;
-          shareLink?: string;
-        };
-
-        const token = result.shareToken || workspace.shareToken || '';
-        const fallbackShareUrl = token ? `${window.location.origin}/workspace/shared/${token}` : '';
-        const shareUrl = result.shareLink
-          ? `${window.location.origin}${result.shareLink}`
-          : fallbackShareUrl;
-
-        if (shareUrl) {
-          await navigator.clipboard.writeText(shareUrl);
-        }
-
-        setWorkspaces((prev) =>
-          prev.map((w) =>
-            w._id === workspace._id
-              ? { ...w, isShared: true, shareToken: token || w.shareToken || null }
-              : w
-          )
-        );
-
-        setToast({
-          title: 'Workspace shared',
-          description: shareUrl ? 'Share link copied to clipboard.' : 'Workspace sharing enabled.',
-        });
-        setTimeout(() => setToast(null), 2500);
-
-        if (navigator.share && shareUrl) {
-          navigator
-            .share({
-              title: workspace.title,
-              text: 'Join my AI interview workspace',
-              url: shareUrl,
-            })
-            .catch((err) => {
-              console.error('Share failed:', err);
-            });
-        }
-        return;
-      }
-
+ const handleShare = async (workspace: Workspace): Promise<void> => {
+  try {
+   
+    if (workspace.isShared) {
       await api.unshareWorkspace(workspace._id);
+
       setWorkspaces((prev) =>
         prev.map((w) =>
-          w._id === workspace._id ? { ...w, isShared: false, shareToken: null } : w
+          w._id === workspace._id
+            ? { ...w, isShared: false, shareToken: null }
+            : w
         )
       );
 
@@ -250,11 +211,52 @@ const InterviewGrid: React.FC = () => {
         title: 'Workspace unshared',
         description: 'Share link has been disabled.',
       });
-      setTimeout(() => setToast(null), 2500);
-    } catch (err) {
-      console.error('Error updating share status:', err);
+
+      return;
     }
-  };
+
+    const result = await api.shareWorkspace(workspace._id) as {
+      shareToken?: string;
+      shareLink?: string;
+    };
+
+    const token = result.shareToken || '';
+    const shareUrl = result.shareLink
+      ? `${window.location.origin}${result.shareLink}`
+      : `${window.location.origin}/workspace/shared/${token}`;
+
+    if (shareUrl) {
+      await navigator.clipboard.writeText(shareUrl);
+    }
+
+    setWorkspaces((prev) =>
+      prev.map((w) =>
+        w._id === workspace._id
+          ? { ...w, isShared: true, shareToken: token }
+          : w
+      )
+    );
+
+    setToast({
+      title: 'Workspace shared',
+      description: 'Share link copied to clipboard.',
+    });
+
+  
+    if (navigator.share && shareUrl) {
+      navigator.share({
+        title: workspace.title,
+        text: 'Join my AI interview workspace',
+        url: shareUrl,
+      }).catch(console.error);
+    }
+
+  } catch (err) {
+    console.error('Error updating share status:', err);
+  } finally {
+    setTimeout(() => setToast(null), 2500);
+  }
+};
 
   if (!hydrated || loading) {
     return (
@@ -293,11 +295,7 @@ const InterviewGrid: React.FC = () => {
                 Contact
               </a>
             </li>
-            {/* <li>
-              <a href="#features" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
-                Features
-              </a>
-            </li> */}
+           
             <li>
               {hydrated && isAuthenticated && user ? (
                 <div className="relative">
@@ -383,15 +381,7 @@ const InterviewGrid: React.FC = () => {
                 Contact
               </a>
             </li>
-            {/* <li>
-              <a
-                href="/feature"
-                className="block px-6 py-2 rounded-full hover:bg-sky-100 hover:text-sky-600 dark:hover:bg-gray-800 w-full text-center"
-                onClick={() => setMenuOpen(false)}
-              >
-                Feature
-              </a>
-            </li> */}
+    
             <li>
               {hydrated && isAuthenticated && user ? (
                 <div className="relative">
@@ -495,14 +485,18 @@ const InterviewGrid: React.FC = () => {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      title={workspace.isShared ? 'Unshare Workspace' : 'Share Workspace'}
+                      title={workspace.isShared ? "Unshare Workspace" : "Share Workspace"}
                       onClick={(e) => {
                         e.stopPropagation();
                         void handleShare(workspace);
                       }}
                       className="bg-transparent border-none cursor-pointer p-1 hover:bg-blue-50 rounded"
                     >
-                      <Share color={workspace.isShared ? '#059669' : '#2563eb'} size={16} />
+                      {workspace.isShared ? (
+                         <CircleX color="#ef4444" size={16} />
+                      ) : (
+                       <Share color="#059669" size={16} />
+                      )}
                     </button>
                     <button
                       title="Edit"
