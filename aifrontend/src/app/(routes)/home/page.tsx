@@ -68,7 +68,7 @@ export default function Home() {
 
           <ul className="hidden md:flex items-center space-x-6 text-lg font-medium">
             <li>
-              <a href="/about" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
+              <a href="#about" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
                 About
               </a>
             </li>
@@ -151,7 +151,7 @@ export default function Home() {
           <ul className="flex flex-col items-center space-y-3 text-lg font-medium">
             <li>
               <a
-                href="/about"
+                href="#about"
                 className="block px-6 py-2 rounded-full hover:bg-sky-100 hover:text-sky-600 dark:hover:bg-gray-800 w-full text-center"
                 onClick={() => setMenuOpen(false)}
               >
@@ -259,6 +259,58 @@ export default function Home() {
               <Button size="lg" className="glass-button hover:bg-blue-600 cursor-pointer" asChild>
                 <Link href="/feedback">View Your Progress</Link>
               </Button>
+            </div>
+          </div>
+        </section>
+
+        <section id="about" className="scroll-mt-36 px-4 sm:px-6 lg:px-8 pb-24 pt-10 md:pb-32">
+          <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-sky-400/20 bg-slate-950/85 p-6 shadow-2xl shadow-sky-950/30 backdrop-blur-xl lg:p-10">
+            <div className="absolute inset-x-6 top-6 h-px bg-gradient-to-r from-transparent via-sky-400/60 to-transparent" />
+            <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="space-y-6">
+              <div className="inline-flex items-center rounded-full border border-sky-400/40 bg-sky-500/15 px-4 py-1.5 text-sm font-medium text-sky-100">
+                About the product
+              </div>
+              <div className="space-y-4">
+                <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-slate-50">
+                  One interview platform that listens, analyzes, and guides every step.
+                </h2>
+                <p className="max-w-2xl text-base sm:text-lg leading-8 text-slate-200">
+                  Wavelength combines live AI evaluation, structured workspace management, and instant feedback so
+                  candidates can practice smarter and teams can review performance with confidence. It brings skill
+                  signals, strengths, gaps, and progress tracking into one focused product experience.
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm uppercase tracking-[0.2em] text-sky-300">Live AI</p>
+                  <p className="mt-2 text-sm text-slate-200">Continuous analysis during interviews and practice sessions.</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm uppercase tracking-[0.2em] text-sky-300">Smart Feedback</p>
+                  <p className="mt-2 text-sm text-slate-200">Clear recommendations that highlight strengths and weak spots.</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm uppercase tracking-[0.2em] text-sky-300">Progress</p>
+                  <p className="mt-2 text-sm text-slate-200">Track improvement across sessions in one shared workspace.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative min-h-[320px] overflow-hidden rounded-[1.75rem] border border-sky-400/20 bg-slate-900/60">
+              <div className="absolute inset-0 bg-gradient-to-br from-sky-500/20 via-slate-900/20 to-indigo-500/25" />
+              <SoundWaveAnimation className="left-0 top-1/2 h-full -translate-y-1/2 opacity-90" />
+              <div className="relative z-10 flex h-full flex-col justify-end p-6 sm:p-8">
+                <div className="max-w-sm space-y-3 rounded-3xl border border-white/10 bg-slate-950/70 p-5 backdrop-blur-md">
+                  <p className="text-sm font-medium uppercase tracking-[0.25em] text-sky-300">AI insight layer</p>
+                  <p className="text-sm leading-6 text-slate-100">
+                    The animated waveform represents the product’s live reasoning engine: it captures signals,
+                    interprets responses, and turns every session into actionable feedback.
+                  </p>
+                </div>
+              </div>
+            </div>
             </div>
           </div>
         </section>

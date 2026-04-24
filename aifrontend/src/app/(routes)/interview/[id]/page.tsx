@@ -28,6 +28,27 @@ interface ChatMessage {
   text: string
 }
 
+type SpeechRecognitionInstance = {
+  start: () => void
+  stop: () => void
+  abort: () => void
+  onresult: ((event: SpeechRecognitionEvent) => void) | null
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null
+  onend: (() => void) | null
+  continuous: boolean
+  interimResults: boolean
+  lang: string
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor
+    webkitSpeechRecognition?: SpeechRecognitionConstructor
+  }
+}
+
 const InterviewSessionPage = () => {
   const params = useParams()
   const router = useRouter()
@@ -56,10 +77,12 @@ const InterviewSessionPage = () => {
   const [showEndConfirm, setShowEndConfirm] = useState(false)
   const [fullscreenPrompt, setFullscreenPrompt] = useState(false)
   const [fullscreenExitCount, setFullscreenExitCount] = useState(0)
+  const [speechError, setSpeechError] = useState<string | null>(null)
 
   const chatEndRef = useRef<HTMLDivElement>(null)
   const interviewSubmittedRef = useRef(false)
   const fullscreenExitCountRef = useRef(0)
+  const speechRecognitionRef = useRef<SpeechRecognitionInstance | null>(null)
 
   // Auth guard
   useEffect(() => {
@@ -165,6 +188,50 @@ const InterviewSessionPage = () => {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatLog])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRecognition) return
+
+    const recognition = new SpeechRecognition()
+    recognition.continuous = false
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
+
+    recognition.onresult = (event) => {
+      let transcript = ''
+
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        transcript += event.results[i][0].transcript
+      }
+
+      setUserAnswer(transcript.trim())
+    }
+
+    recognition.onerror = () => {
+      setIsListening(false)
+      setSpeechError('Speech recognition is not available right now in this browser.')
+    }
+
+    recognition.onend = () => {
+      setIsListening(false)
+    }
+
+    speechRecognitionRef.current = recognition
+
+    return () => {
+      recognition.abort()
+      speechRecognitionRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!speechError) return
+    const timeout = setTimeout(() => setSpeechError(null), 3500)
+    return () => clearTimeout(timeout)
+  }, [speechError])
 
   const completeInterviewAndRedirect = useCallback(async (message?: string) => {
     if (interviewSubmittedRef.current) return
@@ -319,6 +386,31 @@ const InterviewSessionPage = () => {
     }
   }
 
+  const handleMicToggle = () => {
+    const recognition = speechRecognitionRef.current
+
+    if (!recognition) {
+      setSpeechError('This browser does not support speech recognition. Try Chrome or Edge.')
+      return
+    }
+
+    if (isListening) {
+      recognition.stop()
+      setIsListening(false)
+      return
+    }
+
+    setSpeechError(null)
+    setUserAnswer('')
+
+    try {
+      recognition.start()
+      setIsListening(true)
+    } catch {
+      setSpeechError('Speech recognition could not start. Please try again.')
+    }
+  }
+
   const handleEndInterview = async () => {
     setShowEndConfirm(false)
     await completeInterviewAndRedirect('Interview ended by user.')
@@ -380,6 +472,12 @@ const InterviewSessionPage = () => {
           End Interview
         </Button>
       </div>
+
+      {speechError && (
+        <div className="fixed top-20 right-4 z-40 rounded-xl border border-amber-400/30 bg-amber-500/15 px-4 py-2 text-sm text-amber-100 shadow-lg backdrop-blur-sm">
+          {speechError}
+        </div>
+      )}
 
       {fullscreenPrompt && !finished && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm px-4">
@@ -458,7 +556,7 @@ const InterviewSessionPage = () => {
 
           <div className="mt-8 flex gap-4">
             <Button
-              onClick={() => setIsListening(prev => !prev)}
+              onClick={handleMicToggle}
               variant={isListening ? 'default' : 'outline'}
               disabled={finished}
               className={`${
