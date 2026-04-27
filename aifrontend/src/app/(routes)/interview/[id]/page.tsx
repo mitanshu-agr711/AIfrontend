@@ -54,7 +54,7 @@ const InterviewSessionPage = () => {
   const router = useRouter()
   const interviewId = params.id as string
 
-  const { isAuthenticated, hydrated } = useAuthStore()
+  const { isAuthenticated, hydrated, setLastCompletedInterviewId } = useAuthStore()
 
   const [interviewInfo, setInterviewInfo] = useState<InterviewInfo | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
@@ -64,7 +64,6 @@ const InterviewSessionPage = () => {
   const [submitting, setSubmitting] = useState(false)
   const [loadingInterview, setLoadingInterview] = useState(true)
   const [startError, setStartError] = useState<string | null>(null)
-  const [startTime, setStartTime] = useState<number>(Date.now())
 
   const [showBlur, setShowBlur] = useState(true)
   const [countdown, setCountdown] = useState(3)
@@ -78,6 +77,7 @@ const InterviewSessionPage = () => {
   const [fullscreenPrompt, setFullscreenPrompt] = useState(false)
   const [fullscreenExitCount, setFullscreenExitCount] = useState(0)
   const [speechError, setSpeechError] = useState<string | null>(null)
+  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now())
 
   const chatEndRef = useRef<HTMLDivElement>(null)
   const interviewSubmittedRef = useRef(false)
@@ -148,6 +148,7 @@ const InterviewSessionPage = () => {
         setQuestions(normalizedQuestions)
         if (normalizedQuestions.length > 0) {
           setChatLog([{ role: 'bot', text: normalizedQuestions[0].question }])
+          setQuestionStartTime(Date.now())
           setIsSpeaking(true)
           setTimeout(() => setIsSpeaking(false), 2000)
         }
@@ -244,7 +245,9 @@ const InterviewSessionPage = () => {
     }
 
     try {
-      await api.completeInterview(interviewId)
+      const completeResult = await api.completeInterview(interviewId)
+      console.log('Interview completed with result:', completeResult)
+      setLastCompletedInterviewId(interviewId)
     } catch (err) {
       console.error('Failed to complete interview:', err)
     }
@@ -254,8 +257,11 @@ const InterviewSessionPage = () => {
       await document.exitFullscreen()
     }
 
+    // Give backend time to process data (500ms delay)
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
     router.push(`/interview-complete?interviewId=${interviewId}`)
-  }, [interviewId, router])
+  }, [interviewId, router, setLastCompletedInterviewId])
 
   const requestInterviewFullscreen = async () => {
     try {
@@ -335,7 +341,7 @@ const InterviewSessionPage = () => {
     if (!userAnswer.trim() || submitting || !questions[currentIndex]) return
 
     const question = questions[currentIndex]
-    const elapsed = Math.floor((Date.now() - startTime) / 1000)
+    const elapsed = Math.floor((Date.now() - questionStartTime) / 1000)
     const resolvedQuestionId = resolveQuestionId(question)
 
     if (!resolvedQuestionId) {
@@ -368,7 +374,7 @@ const InterviewSessionPage = () => {
     if (!submitSuccess) return
 
     const nextIndex = currentIndex + 1
-    setStartTime(Date.now())
+    setQuestionStartTime(Date.now())
 
     if (nextIndex < questions.length) {
       setCurrentIndex(nextIndex)

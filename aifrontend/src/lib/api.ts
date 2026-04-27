@@ -35,6 +35,7 @@ type ApiWorkspace = {
 type ApiInterview = {
   _id?: string;
   id?: string;
+  attemptId?: string;
   title?: string;
   topic: string;
   status?: string;
@@ -83,7 +84,7 @@ const normalizeWorkspace = (workspace: ApiWorkspace) => ({
 const normalizeInterview = (interview: ApiInterview) => ({
   ...interview,
   _id: interview._id || interview.id || '',
-  status: interview.status || 'not-started',
+  status: interview.status || 'not-started', // Backend should always provide status, only fallback to not-started if truly missing
 });
 
 // Flag to prevent multiple refresh attempts
@@ -459,9 +460,9 @@ export const api = {
       throw error;
     }
   },
-  async getInterviewDetails(interviewId: string) {
+  async getInterviewDetails(attemptId: string) {
     try {
-      return await authFetch(`${BASE_URL}/api/interview/${interviewId}`);
+      return await authFetch(`${BASE_URL}/api/interview/details/${attemptId}`);
     } catch (error) {
       handleError(error);
       throw error;
@@ -481,7 +482,14 @@ export const api = {
   },
   async getUserAnalytics() {
     try {
-      return await authFetch(`${BASE_URL}/api/interview/analytics/user`);
+      const result = await authFetch<any>(`${BASE_URL}/api/interview/analytics/user`);
+      return {
+        ...result,
+        recentInterviews: (result.recentInterviews || []).map((interview: any) => ({
+          ...interview,
+          _id: interview._id || interview.id || '',
+        })),
+      };
     } catch (error) {
       handleError(error);
       throw error;

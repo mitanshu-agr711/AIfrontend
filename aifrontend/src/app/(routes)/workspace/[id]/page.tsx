@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Plus, Calendar, BarChart3, ArrowRight } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -29,31 +29,13 @@ export default function WorkspaceDetailPage() {
   const router = useRouter();
   const workspaceId = params.id as string;
 
-  const { isAuthenticated, hydrated } = useAuthStore();
+  const { isAuthenticated, hydrated, lastCompletedInterviewId, setLastCompletedInterviewId } = useAuthStore();
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  useEffect(() => {
-    const init = async () => {
-      if (!hydrated) return;
-
-      if (!isAuthenticated) {
-        const restored = await api.restoreSession();
-        if (!restored) {
-          router.push('/register');
-          return;
-        }
-      }
-
-      fetchWorkspaceData();
-    };
-
-    init();
-  }, [hydrated, isAuthenticated, workspaceId, router]);
-
-  const fetchWorkspaceData = async () => {
+  const fetchWorkspaceData = useCallback(async () => {
     if (!isAuthenticated) return;
 
     try {
@@ -68,12 +50,41 @@ export default function WorkspaceDetailPage() {
       if (interviewsResult.interviews) {
         setInterviews(interviewsResult.interviews);
       }
+
+      if (lastCompletedInterviewId) {
+        setInterviews((current) =>
+          current.map((interview) =>
+            interview._id === lastCompletedInterviewId
+              ? { ...interview, status: 'completed' }
+              : interview
+          )
+        );
+        setLastCompletedInterviewId(null);
+      }
     } catch (err) {
       console.error('Error fetching workspace data:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated, lastCompletedInterviewId, setLastCompletedInterviewId, workspaceId]);
+
+  useEffect(() => {
+    const init = async () => {
+      if (!hydrated) return;
+
+      if (!isAuthenticated) {
+        const restored = await api.restoreSession();
+        if (!restored) {
+          router.push('/register');
+          return;
+        }
+      }
+
+      void fetchWorkspaceData();
+    };
+
+    init();
+  }, [fetchWorkspaceData, hydrated, isAuthenticated, router]);
 
   const handleInterviewCreated = () => {
     fetchWorkspaceData();

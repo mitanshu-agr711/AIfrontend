@@ -19,8 +19,6 @@ import Logo from "@/components/lib/logo/page";
 import AuthModal from "@/components/AuthModal";
 import Link from "next/link";
 import Image from "next/image";
-// import { ArrowRight } from "lucide-react";
-// import { api } from "@/lib/api";
 
 type UserAnalyticsResponse = {
   overall: {
@@ -41,7 +39,7 @@ type UserAnalyticsResponse = {
     totalWrong: number;
   }>;
   recentInterviews: Array<{
-    _id: string;
+   attemptId: string;
     title: string;
     topic: string;
     scorePercentage: number;
@@ -53,21 +51,19 @@ type UserAnalyticsResponse = {
 type InterviewDetailResponse = {
   interview: {
     id: string;
+    attemptId: string;
     title: string;
-    description?: string;
     topic: string;
     status: string;
-    startedAt?: string;
-    completedAt?: string;
-    createdAt?: string;
+    createdAt: string;
   };
   analytics: {
     totalQuestions: number;
     answeredQuestions: number;
     correctAnswers: number;
     wrongAnswers: number;
-    unansweredQuestions: number;
     scorePercentage: number;
+    totalTimeTakenSeconds?: number;
   };
   questionsWithAnswers: Array<{
     questionId: string;
@@ -79,7 +75,6 @@ type InterviewDetailResponse = {
     timeTaken: number | null;
     answered: boolean;
   }>;
-  weakTopics: string[];
 };
 
 
@@ -121,15 +116,15 @@ const FeedbackPage = () => {
   const router = useRouter();
 
 
-    const { isAuthenticated, user, hydrated } = useAuthStore();
-    const [profileOpen, setProfileOpen] = useState(false);
+  const { isAuthenticated, user, hydrated } = useAuthStore();
+  const [profileOpen, setProfileOpen] = useState(false);
 
-   const handleLogout = async () => {
-      await api.logout();
-      setProfileOpen(false);
-      setMenuOpen(false);
-      router.replace("/register");
-    };
+  const handleLogout = async () => {
+    await api.logout();
+    setProfileOpen(false);
+    setMenuOpen(false);
+    router.replace("/register");
+  };
   const searchParams = useSearchParams();
   const interviewIdFromQuery = searchParams.get("interviewId") || "";
 
@@ -141,10 +136,6 @@ const FeedbackPage = () => {
   const [details, setDetails] = useState<InterviewDetailResponse | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
-
-
-
-
 
   useEffect(() => {
     const init = async () => {
@@ -163,10 +154,13 @@ const FeedbackPage = () => {
         const analyticsResult = (await api.getUserAnalytics()) as UserAnalyticsResponse;
         setAnalytics(analyticsResult);
 
-        const candidateInterviewId = interviewIdFromQuery || analyticsResult.recentInterviews?.[0]?._id || "";
+        const candidateInterviewId = interviewIdFromQuery || analyticsResult.recentInterviews?.[0]?.attemptId;
         if (candidateInterviewId) {
           setSelectedInterviewId(candidateInterviewId);
           await loadInterviewDetails(candidateInterviewId);
+        } else {
+          setSelectedInterviewId("");
+          setDetails(null);
         }
       } catch (error) {
         console.error("Failed to load feedback data:", error);
@@ -180,12 +174,20 @@ const FeedbackPage = () => {
 
   const loadInterviewDetails = async (interviewId: string) => {
     try {
+      if (!interviewId) {
+        console.warn("Cannot load interview details: interviewId is empty");
+        setDetails(null);
+        return;
+      }
       setDetailsLoading(true);
+      console.log("Loading interview details for ID:", interviewId);
       const detailResult = (await api.getInterviewDetails(interviewId)) as InterviewDetailResponse;
+      console.log("Interview details loaded:", detailResult);
       setDetails(detailResult);
       setSelectedInterviewId(interviewId);
     } catch (error) {
       console.error("Failed to load interview details:", error);
+      setDetails(null);
     } finally {
       setDetailsLoading(false);
     }
@@ -194,16 +196,14 @@ const FeedbackPage = () => {
   const totalDurationMins = useMemo(() => {
     if (!details) return 0;
 
+    // First priority: use totalTimeTakenSeconds from analytics if available
+    if (details.analytics.totalTimeTakenSeconds && details.analytics.totalTimeTakenSeconds > 0) {
+      return Math.round(details.analytics.totalTimeTakenSeconds / 60);
+    }
+
+    // Second priority: sum up individual question times
     const secondsFromAnswers = details.questionsWithAnswers.reduce((sum, q) => sum + (q.timeTaken || 0), 0);
     if (secondsFromAnswers > 0) return Math.round(secondsFromAnswers / 60);
-
-    if (details.interview.startedAt && details.interview.completedAt) {
-      const start = new Date(details.interview.startedAt).getTime();
-      const end = new Date(details.interview.completedAt).getTime();
-      if (!Number.isNaN(start) && !Number.isNaN(end) && end > start) {
-        return Math.round((end - start) / 60000);
-      }
-    }
 
     return 0;
   }, [details]);
@@ -218,7 +218,7 @@ const FeedbackPage = () => {
     return [...analytics.recentInterviews]
       .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
       .map((item) => ({
-        id: item._id,
+        id: item.attemptId,
         label: new Date(item.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         score: item.scorePercentage || 0,
       }));
@@ -302,10 +302,10 @@ const FeedbackPage = () => {
     );
   }
 
-  console.log("user",{user})
+  console.log("user", { user })
   return (
     <>
-  
+
       <nav className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-[90%] md:w-3/4 lg:w-1/2 rounded-full shadow-xl border border-white/20 backdrop-blur-lg bg-white/70 transition-all cursor-pointer">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center space-x-4">
@@ -353,7 +353,7 @@ const FeedbackPage = () => {
                   </button>
 
                   {/* Dropdown */}
-                 {profileOpen && (
+                  {profileOpen && (
                     <div className="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg border border-gray-300 py-2 z-50">
 
                       <div className="px-4 py-2 text-gray-700 font-medium border-b hover:bg-sky-600 transition-all cursor-pointer
@@ -402,7 +402,7 @@ const FeedbackPage = () => {
           <ul className="flex flex-col items-center space-y-3 text-lg font-medium">
             <li>
               <a href="/home" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
-               Home
+                Home
               </a>
             </li>
             <li>
@@ -495,9 +495,9 @@ const FeedbackPage = () => {
       <div className="min-h-screen p-6 md:p-8  mb-5 mt-[6rem]">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="bg-white/95 rounded-2xl border border-slate-200 shadow-lg p-6">
-          <h2 className="text-2xl font-bold text-slate-800">Hi !</h2>
-          {user && <h1 className="text-3xl font-bold text-blue-400">{user.name}</h1>} 
-         
+            <h2 className="text-2xl font-bold text-slate-800">Hi !</h2>
+            {user && <h1 className="text-3xl font-bold text-blue-400">{user.name}</h1>}
+
             <h4 className="text-xl font-bold text-slate-800 flex items-center gap-3">
               <Award className="w-8 h-8 text-blue-600" />
               Feedback & Analytics Dashboard
@@ -526,9 +526,9 @@ const FeedbackPage = () => {
             </div>
           )}
 
-        {!!scoreTrend.length && (
-   <ScoreTrendGraph data={scoreTrend} />
-)}
+          {!!scoreTrend.length && (
+            <ScoreTrendGraph data={scoreTrend} />
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1 bg-white/95 rounded-2xl border border-slate-200 shadow p-5">
@@ -536,25 +536,35 @@ const FeedbackPage = () => {
                 <ListChecks className="w-5 h-5 text-blue-600" />
                 Recent Interviews
               </h2>
-              <div className="space-y-3 max-h-105 overflow-y-auto pr-1">
-                {(analytics?.recentInterviews || []).map((item) => (
-                  <button
-                    key={item._id}
-                    onClick={() => loadInterviewDetails(item._id)}
-                    className={`w-full text-left p-4 rounded-xl border transition ${
-                      selectedInterviewId === item._id
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-slate-200 bg-white hover:border-slate-300"
-                    }`}
-                  >
-                    <p className="font-semibold text-slate-800">{item.title}</p>
-                    <p className="text-sm text-slate-600">{item.topic}</p>
-                    <div className="flex items-center justify-between mt-2 text-xs">
-                      <span className="text-slate-500">{new Date(item.createdAt).toLocaleDateString()}</span>
-                      <span className="font-semibold text-blue-700">{item.scorePercentage ?? 0}%</span>
-                    </div>
-                  </button>
-                ))}
+              <div className="space-y-3 max-h-105 overflow-y-auto pr-1 cursore-pointer">
+                {(analytics?.recentInterviews || []).map((item) => {
+                  console.log("Interview Item:", item);
+
+                  return (
+                    <button
+                      key={item.attemptId}
+                      onClick={() => {
+                        console.log("Clicked ID:", item.attemptId);
+                        loadInterviewDetails(item.attemptId);
+                      }}
+                      className={`w-full text-left p-4 rounded-xl border transition cursor-pointer ${selectedInterviewId === item.attemptId
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-slate-200 bg-white hover:border-slate-300"
+                        }`}
+                    >
+                      <p className="font-semibold text-slate-800">{item.title}</p>
+                      <p className="text-sm text-slate-600">{item.topic}</p>
+                      <div className="flex items-center justify-between mt-2 text-xs">
+                        <span className="text-slate-500">
+                          {new Date(item.createdAt).toLocaleDateString()}
+                        </span>
+                        <span className="font-semibold text-blue-700">
+                          {item.scorePercentage ?? 0}%
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -650,21 +660,7 @@ const FeedbackPage = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-xl border p-4 bg-blue-50/60">
-                    <h3 className="font-semibold text-slate-800 flex items-center gap-2 mb-2">
-                      <TrendingUp className="w-4 h-4 text-blue-600" />
-                      Weak Topics
-                    </h3>
-                    {details.weakTopics.length > 0 ? (
-                      <ul className="text-sm text-slate-700 list-disc pl-5 space-y-1">
-                        {details.weakTopics.map((item, idx) => (
-                          <li key={`${item}-${idx}`}>{item}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-slate-600">No weak topics detected for this interview.</p>
-                    )}
-                  </div>
+
                 </div>
               ) : (
                 <div className="h-72 flex items-center justify-center text-slate-500">Select an interview to view details.</div>

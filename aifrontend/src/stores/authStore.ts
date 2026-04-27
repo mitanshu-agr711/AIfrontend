@@ -14,12 +14,14 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   hydrated: boolean; 
+  lastCompletedInterviewId: string | null;
   
   setAuth: (accessToken: string, user: User) => void;
   updateAccessToken: (accessToken: string) => void;
   logout: () => void;
   getAccessToken: () => string | null;
   setHydrated: () => void; 
+  setLastCompletedInterviewId: (interviewId: string | null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -29,6 +31,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       hydrated: false, 
+      lastCompletedInterviewId: null,
 
       setAuth: (accessToken: string, user: User) => {
         console.log('💾 Setting auth in store:', {
@@ -51,6 +54,7 @@ export const useAuthStore = create<AuthState>()(
           accessToken: null,
           user: null,
           isAuthenticated: false,
+          lastCompletedInterviewId: null,
         });
       },
 
@@ -65,6 +69,10 @@ export const useAuthStore = create<AuthState>()(
       },
       
       setHydrated: () => set({ hydrated: true }), 
+
+      setLastCompletedInterviewId: (interviewId: string | null) => {
+        set({ lastCompletedInterviewId: interviewId });
+      },
     }),
     {
       name: 'ai-interview-auth',

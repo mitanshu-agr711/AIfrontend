@@ -25,6 +25,7 @@ type InterviewDetailResponse = {
     wrongAnswers: number;
     unansweredQuestions: number;
     scorePercentage: number;
+    totalTimeTakenSeconds?: number;
   };
   questionsWithAnswers: Array<{
     timeTaken?: number | null;
@@ -57,7 +58,11 @@ const InterviewCompletePage = () => {
       }
 
       try {
+        // Add delay to ensure backend has processed the interview
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         const result = (await api.getInterviewDetails(interviewId)) as InterviewDetailResponse;
+        console.log("Interview details loaded:", result);
         setDetails(result);
       } catch (error) {
         console.error("Failed to load interview details:", error);
@@ -71,9 +76,17 @@ const InterviewCompletePage = () => {
 
   const totalDurationMins = useMemo(() => {
     if (!details) return 0;
+    
+    // First priority: use totalTimeTakenSeconds from analytics if available
+    if (details.analytics.totalTimeTakenSeconds && details.analytics.totalTimeTakenSeconds > 0) {
+      return Math.round(details.analytics.totalTimeTakenSeconds / 60);
+    }
+    
+    // Second priority: sum up individual question times
     const secondsFromAnswers = details.questionsWithAnswers.reduce((sum, q) => sum + (q.timeTaken || 0), 0);
     if (secondsFromAnswers > 0) return Math.round(secondsFromAnswers / 60);
 
+    // Fallback: use startedAt and completedAt timestamps
     if (details.interview.startedAt && details.interview.completedAt) {
       const start = new Date(details.interview.startedAt).getTime();
       const end = new Date(details.interview.completedAt).getTime();
@@ -122,19 +135,19 @@ const InterviewCompletePage = () => {
             <div className="bg-blue-50 rounded-xl p-4">
               <div className="flex items-center justify-center gap-2 text-blue-600">
                 <Clock3 className="w-5 h-5" />
-                <span className="text-2xl font-bold">{totalDurationMins} min</span>
+                <span className="text-2xl font-bold">{totalDurationMins === 0 && loading ? "..." : totalDurationMins} min</span>
               </div>
               <div className="text-sm text-gray-600">Duration</div>
             </div>
             <div className="bg-green-50 rounded-xl p-4">
               <div className="flex items-center justify-center gap-2 text-green-600">
                 <CircleCheckBig className="w-5 h-5" />
-                <span className="text-2xl font-bold">{analytics ? `${analytics.correctAnswers}/${analytics.totalQuestions}` : "-"}</span>
+                <span className="text-2xl font-bold">{analytics ? `${analytics.correctAnswers ?? 0}/${analytics.totalQuestions ?? 0}` : "0/0"}</span>
               </div>
               <div className="text-sm text-gray-600">Correct Answers</div>
             </div>
             <div className="bg-purple-50 rounded-xl p-4">
-              <div className="text-2xl font-bold text-purple-600">{analytics ? `${analytics.scorePercentage}%` : "-"}</div>
+              <div className="text-2xl font-bold text-purple-600">{analytics ? `${analytics.scorePercentage ?? 0}%` : "0%"}</div>
               <div className="text-sm text-gray-600">Performance Score</div>
             </div>
           </div>

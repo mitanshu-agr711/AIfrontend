@@ -34,42 +34,53 @@ export default function SharedWorkspacePage() {
   const router = useRouter();
   const token = params.token as string;
 
-  const { hydrated, isAuthenticated } = useAuthStore();
+  const { hydrated, isAuthenticated, lastCompletedInterviewId, setLastCompletedInterviewId } = useAuthStore();
 
   const [workspace, setWorkspace] = useState<SharedWorkspace | null>(null);
   const [interviews, setInterviews] = useState<SharedInterview[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchSharedWorkspace = useCallback(async () => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const result = await api.getSharedWorkspace(token) as {
+        workspace?: SharedWorkspace;
+        interviews?: SharedInterview[];
+      };
+
+      if (result.workspace) {
+        setWorkspace(result.workspace);
+      }
+
+      if (result.interviews) {
+        setInterviews(result.interviews);
+      }
+
+      if (lastCompletedInterviewId) {
+        setInterviews((current) =>
+          current.map((interview) =>
+            interview._id === lastCompletedInterviewId
+              ? { ...interview, status: 'completed' }
+              : interview
+          )
+        );
+        setLastCompletedInterviewId(null);
+      }
+    } catch (error) {
+      console.error('Failed to load shared workspace:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [lastCompletedInterviewId, setLastCompletedInterviewId, token]);
+
   useEffect(() => {
-    const fetchSharedWorkspace = async () => {
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const result = await api.getSharedWorkspace(token) as {
-          workspace?: SharedWorkspace;
-          interviews?: SharedInterview[];
-        };
-
-        if (result.workspace) {
-          setWorkspace(result.workspace);
-        }
-
-        if (result.interviews) {
-          setInterviews(result.interviews);
-        }
-      } catch (error) {
-        console.error('Failed to load shared workspace:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSharedWorkspace();
-  }, [token]);
+    void fetchSharedWorkspace();
+  }, [fetchSharedWorkspace]);
 
   const handleStartInterview = useCallback(async (interviewId: string) => {
     if (!hydrated) return;
