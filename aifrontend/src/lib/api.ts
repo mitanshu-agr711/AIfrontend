@@ -42,6 +42,21 @@ type ApiInterview = {
   createdAt: string;
 };
 
+type UserAnalyticsApiInterview = {
+  _id?: string;
+  id?: string;
+  attemptId?: string;
+  title?: string;
+  topic?: string;
+  status?: string;
+  createdAt?: string;
+};
+
+type UserAnalyticsApiResponse = {
+  recentInterviews?: UserAnalyticsApiInterview[];
+  [key: string]: unknown;
+};
+
 const withJson = (init?: JsonInit) => {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -470,7 +485,7 @@ export const api = {
   },
   async getWorkspaceInterviews(workspaceId: string) {
     try {
-      const result = await authFetch<{ interviews?: ApiInterview[] }>(`${BASE_URL}/api/interview/workspace/${workspaceId}`);
+      const result = await authFetch<{ interviews?: ApiInterview[]; interviewStatus?: unknown }>(`${BASE_URL}/api/interview/workspace/${workspaceId}`);
       return {
         ...result,
         interviews: (result.interviews || []).map(normalizeInterview),
@@ -482,10 +497,10 @@ export const api = {
   },
   async getUserAnalytics() {
     try {
-      const result = await authFetch<any>(`${BASE_URL}/api/interview/analytics/user`);
+      const result = await authFetch<UserAnalyticsApiResponse>(`${BASE_URL}/api/interview/analytics/user`);
       return {
         ...result,
-        recentInterviews: (result.recentInterviews || []).map((interview: any) => ({
+        recentInterviews: (result.recentInterviews || []).map((interview) => ({
           ...interview,
           _id: interview._id || interview.id || '',
         })),

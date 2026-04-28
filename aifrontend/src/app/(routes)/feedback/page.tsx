@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/authStore";
 import { GradientBackground } from "@/components/gradient-background";
-import { Loader2, Award, Clock3, CircleCheckBig, CircleX, TrendingUp, ListChecks, Menu, PanelRightClose } from "lucide-react";
+import { Loader2, Award, Clock3, CircleCheckBig, CircleX, ListChecks, Menu, PanelRightClose } from "lucide-react";
 import {
   LineChart,
   Line,

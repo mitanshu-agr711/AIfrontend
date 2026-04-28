@@ -11,11 +11,29 @@ import Link from 'next/link';
 
 interface Interview {
   _id: string;
+  attemptId?: string;
   title?: string;
   topic: string;
   status: string;
   createdAt: string;
 }
+
+type WorkspaceInterviewStatus =
+  | Record<string, string | { status?: string } | undefined>
+  | Array<{
+      _id?: string;
+      id?: string;
+      interviewId?: string;
+      attemptId?: string;
+      status?: string;
+    }>
+  | null
+  | undefined;
+
+type WorkspaceInterviewsResponse = {
+  interviews?: Interview[];
+  interviewStatus?: WorkspaceInterviewStatus;
+};
 
 interface WorkspaceDetail {
   _id: string;
@@ -29,44 +47,63 @@ export default function WorkspaceDetailPage() {
   const router = useRouter();
   const workspaceId = params.id as string;
 
-  const { isAuthenticated, hydrated, lastCompletedInterviewId, setLastCompletedInterviewId } = useAuthStore();
+  const { isAuthenticated, hydrated } = useAuthStore();
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const fetchWorkspaceData = useCallback(async () => {
+  const fetchWorkspaceData = useCallback(async (showLoader = true) => {
     if (!isAuthenticated) return;
 
     try {
-      setLoading(true);
+      if (showLoader) setLoading(true);
 
       const workspaceResult = await api.getWorkspaceById(workspaceId) as unknown as { workspace: WorkspaceDetail };
       if (workspaceResult.workspace) {
         setWorkspace(workspaceResult.workspace);
       }
 
-      const interviewsResult = await api.getWorkspaceInterviews(workspaceId) as { interviews: Interview[] };
+      const interviewsResult = await api.getWorkspaceInterviews(workspaceId) as WorkspaceInterviewsResponse;
       if (interviewsResult.interviews) {
-        setInterviews(interviewsResult.interviews);
-      }
+        const statusPayload = interviewsResult.interviewStatus;
 
-      if (lastCompletedInterviewId) {
-        setInterviews((current) =>
-          current.map((interview) =>
-            interview._id === lastCompletedInterviewId
-              ? { ...interview, status: 'completed' }
-              : interview
-          )
+        const resolveStatus = (interview: Interview): string | undefined => {
+          if (!statusPayload) return undefined;
+
+          const keys = [interview._id, interview.attemptId].filter(Boolean) as string[];
+
+          if (Array.isArray(statusPayload)) {
+            const matched = statusPayload.find((item) =>
+              keys.includes(item._id || item.id || item.interviewId || item.attemptId || '')
+            );
+            return matched?.status;
+          }
+
+          for (const key of keys) {
+            const entry = statusPayload[key];
+            if (typeof entry === 'string') return entry;
+            if (entry && typeof entry === 'object' && 'status' in entry) {
+              return entry.status;
+            }
+          }
+
+          return undefined;
+        };
+
+        setInterviews(
+          interviewsResult.interviews.map((interview) => {
+            const latestStatus = resolveStatus(interview);
+            return latestStatus ? { ...interview, status: latestStatus } : interview;
+          })
         );
-        setLastCompletedInterviewId(null);
       }
     } catch (err) {
       console.error('Error fetching workspace data:', err);
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
-  }, [isAuthenticated, lastCompletedInterviewId, setLastCompletedInterviewId, workspaceId]);
+  }, [isAuthenticated, workspaceId]);
 
   useEffect(() => {
     const init = async () => {
@@ -85,6 +122,16 @@ export default function WorkspaceDetailPage() {
 
     init();
   }, [fetchWorkspaceData, hydrated, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (!hydrated || !isAuthenticated) return;
+
+    const interval = setInterval(() => {
+      void fetchWorkspaceData(false);
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [fetchWorkspaceData, hydrated, isAuthenticated]);
 
   const handleInterviewCreated = () => {
     fetchWorkspaceData();

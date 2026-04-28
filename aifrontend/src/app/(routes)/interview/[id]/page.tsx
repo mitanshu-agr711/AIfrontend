@@ -83,7 +83,68 @@ const InterviewSessionPage = () => {
   const interviewSubmittedRef = useRef(false)
   const fullscreenExitCountRef = useRef(0)
   const speechRecognitionRef = useRef<SpeechRecognitionInstance | null>(null)
+  const streamTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null)
 
+
+  const streamBotMessage = useCallback(async (message: string, delayMs = 110) => {
+    const words = message.trim().split(/\s+/).filter(Boolean)
+
+    if (typeof window !== 'undefined' && !isMuted && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel()
+      const utterance = new SpeechSynthesisUtterance(message)
+      utterance.rate = 1
+      utterance.pitch = 1
+      utterance.volume = 1
+      speechSynthesisRef.current = utterance
+      window.speechSynthesis.speak(utterance)
+    }
+
+    if (streamTimeoutRef.current) {
+      clearTimeout(streamTimeoutRef.current)
+      streamTimeoutRef.current = null
+    }
+
+    if (words.length === 0) {
+      setChatLog(prev => [...prev, { role: 'bot', text: message }])
+      return
+    }
+
+    setChatLog(prev => [...prev, { role: 'bot', text: '' }])
+
+    await new Promise<void>((resolve) => {
+      let index = 0
+
+      const emitWord = () => {
+        index += 1
+        const partial = words.slice(0, index).join(' ')
+
+        setChatLog(prev => {
+          if (prev.length === 0) return [{ role: 'bot', text: partial }]
+          const updated = [...prev]
+          updated[updated.length - 1] = { role: 'bot', text: partial }
+          return updated
+        })
+
+        if (index < words.length) {
+          streamTimeoutRef.current = setTimeout(emitWord, delayMs)
+          return
+        }
+        streamTimeoutRef.current = null
+        resolve()
+      }
+
+      streamTimeoutRef.current = setTimeout(emitWord, delayMs)
+    })
+  }, [isMuted])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+
+    if (isMuted) {
+      window.speechSynthesis.cancel()
+    }
+  }, [isMuted])
   // Auth guard
   useEffect(() => {
     const init = async () => {
@@ -147,10 +208,11 @@ const InterviewSessionPage = () => {
         }))
         setQuestions(normalizedQuestions)
         if (normalizedQuestions.length > 0) {
-          setChatLog([{ role: 'bot', text: normalizedQuestions[0].question }])
+          setChatLog([])
           setQuestionStartTime(Date.now())
           setIsSpeaking(true)
-          setTimeout(() => setIsSpeaking(false), 2000)
+          await streamBotMessage(normalizedQuestions[0].question)
+          setIsSpeaking(false)
         }
       } catch (err) {
         console.error('Failed to start interview:', err)
@@ -164,8 +226,8 @@ const InterviewSessionPage = () => {
       }
     }
 
-    startInterview()
-  }, [hydrated, interviewId, router])
+    void startInterview()
+  }, [hydrated, interviewId, router, streamBotMessage])
 
   // Countdown blur
   useEffect(() => {
@@ -234,6 +296,14 @@ const InterviewSessionPage = () => {
     return () => clearTimeout(timeout)
   }, [speechError])
 
+  useEffect(() => {
+    return () => {
+      if (streamTimeoutRef.current) {
+        clearTimeout(streamTimeoutRef.current)
+      }
+    }
+  }, [])
+
   const completeInterviewAndRedirect = useCallback(async (message?: string) => {
     if (interviewSubmittedRef.current) return
 
@@ -257,9 +327,12 @@ const InterviewSessionPage = () => {
       await document.exitFullscreen()
     }
 
-    // Give backend time to process data (500ms delay)
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
+    // Remove interview-mode class immediately so global footer becomes visible
+    try { document.body.classList.remove('interview-mode') } catch (e) { /* ignore */ }
+
+    // Give backend time to process data (short delay)
+    await new Promise(resolve => setTimeout(resolve, 1200))
+
     router.push(`/interview-complete?interviewId=${interviewId}`)
   }, [interviewId, router, setLastCompletedInterviewId])
 
@@ -338,7 +411,7 @@ const InterviewSessionPage = () => {
   }
 
   const handleSubmitAnswer = async () => {
-    if (!userAnswer.trim() || submitting || !questions[currentIndex]) return
+    if (!userAnswer.trim() || submitting || isSpeaking || !questions[currentIndex]) return
 
     const question = questions[currentIndex]
     const elapsed = Math.floor((Date.now() - questionStartTime) / 1000)
@@ -378,17 +451,15 @@ const InterviewSessionPage = () => {
 
     if (nextIndex < questions.length) {
       setCurrentIndex(nextIndex)
-      setChatLog(prev => [...prev, { role: 'bot', text: questions[nextIndex].question }])
       setIsSpeaking(true)
-      setTimeout(() => setIsSpeaking(false), 2000)
+      await streamBotMessage(questions[nextIndex].question)
+      setIsSpeaking(false)
     } else {
-      setChatLog(prev => [...prev, { role: 'bot', text: 'All questions completed! Great job. Ending the interview now.' }])
-      setFinished(true)
       setIsSpeaking(true)
-      setTimeout(async () => {
-        setIsSpeaking(false)
-        await completeInterviewAndRedirect()
-      }, 2500)
+      await streamBotMessage('All questions completed! Great job. Ending the interview now.')
+      setIsSpeaking(false)
+      setFinished(true)
+      await completeInterviewAndRedirect()
     }
   }
 
@@ -424,22 +495,24 @@ const InterviewSessionPage = () => {
 
   if (!hydrated || loadingInterview) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center justify-center gap-4">
-        <Loader2 className="w-12 h-12 text-white animate-spin" />
-        <p className="text-white/70 text-lg">Preparing your interview...</p>
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-sky-50 flex flex-col items-center justify-center gap-4">
+        <div className="rounded-2xl border border-slate-200 bg-white/90 px-6 py-5 shadow-lg backdrop-blur-sm flex flex-col items-center gap-3">
+          <Loader2 className="w-12 h-12 text-sky-600 animate-spin" />
+          <p className="text-slate-700 text-lg">Preparing your interview...</p>
+        </div>
       </div>
     )
   }
 
   if (startError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6">
-        <div className="w-full max-w-xl rounded-2xl border border-white/20 bg-slate-900/85 p-8 text-center shadow-2xl">
-          <h1 className="text-2xl font-bold text-white">Unable to start interview</h1>
-          <p className="mt-3 text-white/70">{startError}</p>
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-sky-50 flex items-center justify-center p-6">
+        <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-2xl">
+          <h1 className="text-2xl font-bold text-slate-900">Unable to start interview</h1>
+          <p className="mt-3 text-slate-600">{startError}</p>
           <Button
             onClick={() => router.push('/workspace')}
-            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white"
+            className="mt-6 bg-sky-600 hover:bg-sky-700 text-white"
           >
             Back to Workspace
           </Button>
@@ -449,17 +522,18 @@ const InterviewSessionPage = () => {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen relative overflow-hidden bg-linear-to-br from-slate-50 via-white to-sky-50 text-slate-800">
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_24%)]" />
 
       {showBlur && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md">
-          <div className="text-white text-6xl font-bold animate-pulse">{countdown}</div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-white/35">
+          <div className="rounded-full border border-slate-200 bg-white px-8 py-6 text-sky-700 text-6xl font-bold shadow-xl animate-pulse">{countdown}</div>
         </div>
       )}
 
       <div className="fixed top-4 right-4 z-40 flex gap-2 items-center">
         {timerActive && (
-          <div className="bg-red-600/90 backdrop-blur-sm px-4 py-2 rounded-xl text-white font-bold text-lg shadow-lg">
+          <div className="bg-rose-50 backdrop-blur-sm px-4 py-2 rounded-xl text-rose-700 font-bold text-lg shadow-lg border border-rose-200">
             {formatTime(timer)}
           </div>
         )}
@@ -467,37 +541,37 @@ const InterviewSessionPage = () => {
           onClick={() => setIsMuted(!isMuted)}
           variant="outline"
           size="sm"
-          className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+          className="bg-white/90 backdrop-blur-sm border-slate-200 text-slate-700 hover:bg-slate-50"
         >
           {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </Button>
         <Button
           onClick={() => setShowEndConfirm(true)}
-          className="bg-red-500/90 backdrop-blur-sm hover:bg-red-600 text-white shadowF-lg cursor-pointer"
+          className="bg-rose-500/90 backdrop-blur-sm hover:bg-rose-600 text-white shadow-lg cursor-pointer"
         >
           End Interview
         </Button>
       </div>
 
       {speechError && (
-        <div className="fixed top-20 right-4 z-40 rounded-xl border border-amber-400/30 bg-amber-500/15 px-4 py-2 text-sm text-amber-100 shadow-lg backdrop-blur-sm">
+        <div className="fixed top-20 right-4 z-40 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800 shadow-lg backdrop-blur-sm">
           {speechError}
         </div>
       )}
 
       {fullscreenPrompt && !finished && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm px-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-900/95 p-6 text-center shadow-2xl">
-            <h3 className="text-xl font-semibold text-white">Full screen required</h3>
-            <p className="mt-2 text-sm text-white/70">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/20 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white/95 p-6 text-center shadow-2xl">
+            <h3 className="text-xl font-semibold text-slate-900">Full screen required</h3>
+            <p className="mt-2 text-sm text-slate-600">
               Please return to full screen mode to continue this interview.
             </p>
-            <p className="mt-2 text-xs text-amber-300">
+            <p className="mt-2 text-xs text-amber-600">
               Exit attempts: {fullscreenExitCount}/2
             </p>
             <Button
               onClick={() => void requestInterviewFullscreen()}
-              className="mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="mt-5 w-full bg-sky-600 hover:bg-sky-700 text-white"
             >
               Enter Full Screen
             </Button>
@@ -506,23 +580,23 @@ const InterviewSessionPage = () => {
       )}
 
       {showEndConfirm && !finished && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm px-4">
-          <div className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-900 p-6 shadow-2xl">
-            <h3 className="text-xl font-semibold text-white text-center">Are you sure?</h3>
-            <p className="text-sm text-white/70 text-center mt-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/20 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <h3 className="text-xl font-semibold text-slate-900 text-center">Are you sure?</h3>
+            <p className="text-sm text-slate-600 text-center mt-2">
               Ending now will submit your interview and take you to the completion page.
             </p>
-            <div className="mt-6 flex gap-3">
+            <div className="mt-6 flex gap-3 hover:cursor-pointer">
               <Button
                 onClick={() => setShowEndConfirm(false)}
                 variant="outline"
-                className="w-1/2 border-white/20 text-white hover:bg-white/10"
+                className="w-1/2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:cursor-pointer"
               >
                 Cancel
               </Button>
               <Button
                 onClick={() => void handleEndInterview()}
-                className="w-1/2 bg-red-500 hover:bg-red-600 text-white hover:cursor:pointer"
+                className="w-1/2 bg-rose-500 hover:bg-rose-600 text-white hover:cursor:pointer"
               >
                 Yes, End
               </Button>
@@ -537,11 +611,11 @@ const InterviewSessionPage = () => {
         <div className="relative lg:w-[60%] w-full flex flex-col justify-center items-center p-8">
           {interviewInfo && (
             <div className="text-center mb-4">
-              <h1 className="text-3xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-emerald-400">
+              <h1 className="text-3xl lg:text-5xl font-bold text-slate-900">
                 {interviewInfo.title || 'Interview Bot'}
               </h1>
-              <p className="text-white/60 text-sm mt-1">
-                Topic: <span className="text-white/90 font-medium">{interviewInfo.topic.charAt(0).toUpperCase() + interviewInfo.topic.slice(1)}</span>
+              <p className="text-slate-500 text-sm mt-1">
+                Topic: <span className="text-slate-700 font-medium">{interviewInfo.topic.charAt(0).toUpperCase() + interviewInfo.topic.slice(1)}</span>
                 &nbsp;•&nbsp;
                 Question {Math.min(currentIndex + 1, questions.length)} of {questions.length}
               </p>
@@ -550,7 +624,7 @@ const InterviewSessionPage = () => {
 
           <video
             src="/video@2.mp4"
-            className="absolute inset-0 w-full h-full object-cover opacity-10 -z-10"
+            className="absolute inset-0 w-full h-full object-cover opacity-5 -z-10"
             autoPlay loop muted playsInline
           />
 
@@ -566,8 +640,8 @@ const InterviewSessionPage = () => {
               variant={isListening ? 'default' : 'outline'}
               disabled={finished}
               className={`${
-                isListening ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-white/10 hover:bg-white/20'
-              } backdrop-blur-sm border-white/20 text-white cursor-pointer`}
+                isListening ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-white hover:bg-slate-50'
+              } backdrop-blur-sm border-slate-200 text-slate-700 cursor-pointer`}
             >
               {isListening ? <Mic className="w-4 h-4 mr-2" /> : <MicOff className="w-4 h-4 mr-2" />}
               {isListening ? 'Listening...' : 'Start Speaking'}
@@ -576,10 +650,10 @@ const InterviewSessionPage = () => {
         </div>
 
         {/* RIGHT — Chat + answer */}
-        <div className="lg:w-[40%] w-full bg-white/5 backdrop-blur-sm border-l border-white/10 flex flex-col">
-          <div className="p-4 border-b border-white/10">
-            <h2 className="text-xl font-semibold text-white">Chat Interface</h2>
-            <p className="text-white/60 text-sm">
+        <div className="lg:w-[40%] w-full bg-white/80 backdrop-blur-sm border-l border-slate-200 flex flex-col shadow-[-12px_0_40px_rgba(15,23,42,0.04)]">
+          <div className="p-4 border-b border-slate-200 bg-white/90">
+            <h2 className="text-xl font-semibold text-slate-900">Chat Interface</h2>
+            <p className="text-slate-500 text-sm">
               {interviewInfo
                 ? `${interviewInfo.topic} Interview • ${interviewInfo.totalQuestions} questions`
                 : 'Voice responses with text backup'}
@@ -590,17 +664,17 @@ const InterviewSessionPage = () => {
             {chatLog.map((msg, i) => (
               <div
                 key={i}
-                className={`rounded-lg p-3 ${msg.role === 'bot' ? 'bg-white/10' : 'bg-blue-500/20 ml-8'}`}
+                className={`rounded-2xl p-3 border ${msg.role === 'bot' ? 'bg-slate-50 border-slate-200' : 'bg-sky-50 border-sky-200 ml-8'}`}
               >
-                <p className="text-xs text-white/50 mb-1">{msg.role === 'bot' ? 'Bot' : 'You'}</p>
-                <p className="text-sm text-white/90">{msg.text}</p>
+                <p className="text-xs text-slate-500 mb-1">{msg.role === 'bot' ? 'Bot' : 'You'}</p>
+                <p className="text-sm text-slate-800">{msg.text}</p>
               </div>
             ))}
             <div ref={chatEndRef} />
           </div>
 
           {!finished && (
-            <div className="p-4 border-t border-white/10">
+            <div className="p-4 border-t border-slate-200 bg-white/90">
               <textarea
                 value={userAnswer}
                 onChange={e => setUserAnswer(e.target.value)}
@@ -609,13 +683,13 @@ const InterviewSessionPage = () => {
                 }}
                 rows={3}
                 placeholder="Type your answer here... (Enter to submit)"
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/40 text-sm resize-none outline-none focus:border-blue-400 transition mb-2"
+                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 placeholder-slate-400 text-sm resize-none outline-none focus:border-sky-400 transition mb-2"
                 disabled={submitting}
               />
               <Button
                 onClick={handleSubmitAnswer}
                 disabled={!userAnswer.trim() || submitting}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold cursor-pointer disabled:opacity-50"
+                className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold cursor-pointer disabled:opacity-50"
               >
                 {submitting ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Submitting...</>
