@@ -21,13 +21,13 @@ export default function Footer() {
     const year = new Date().getFullYear();
 
     return (
-        <footer id="contact" className="relative mt-20 overflow-hidden border-t border-slate-200 bg-slate-50 text-slate-800">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.08),transparent_28%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.08),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.92),rgba(248,250,252,1))]" />
-            <div className="absolute left-10 top-8 h-32 w-32 rounded-full bg-sky-200/60 blur-3xl" />
-            <div className="absolute bottom-0 right-10 h-40 w-40 rounded-full bg-blue-200/60 blur-3xl" />
+        <footer id="contact" className="relative mt-20 overflow-hidden border-t border-slate-200 bg-[#f8fbff] text-slate-800">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.12),transparent_28%),radial-gradient(circle_at_top_right,rgba(56,189,248,0.12),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,248,255,1))]" />
+            <div className="absolute left-10 top-8 h-32 w-32 rounded-full bg-sky-200/50 blur-3xl" />
+            <div className="absolute bottom-0 right-10 h-40 w-40 rounded-full bg-blue-200/50 blur-3xl" />
 
             <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-                <div className="rounded-4xl border border-slate-200 bg-white/90 p-8 shadow-[0_25px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-10">
+                <div className="rounded-4xl border border-slate-200 bg-white/95 p-8 shadow-[0_25px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-10">
                     <div className="grid gap-10 lg:grid-cols-[1.3fr_0.8fr_0.9fr]">
                         <div className="space-y-6">
                             <div className="flex items-center gap-4">
@@ -47,7 +47,7 @@ export default function Footer() {
                                 {footerHighlights.map(({ icon: Icon, label }) => (
                                     <div
                                         key={label}
-                                        className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm text-sky-700"
+                                        className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-4 py-2 text-sm text-sky-700 shadow-sm shadow-sky-100/70"
                                     >
                                         <Icon className="h-4 w-4 text-sky-500" />
                                         <span>{label}</span>
@@ -72,7 +72,7 @@ export default function Footer() {
                             </nav>
                         </div>
 
-                        <div className="space-y-5 rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-inner shadow-sky-100/60">
+                        <div className="space-y-5 rounded-[1.75rem] border border-sky-100 bg-linear-to-br from-white to-sky-50 p-6 shadow-inner shadow-sky-100/60">
                             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-600">Start Now</p>
                             <h3 className="text-2xl font-semibold tracking-tight text-slate-900">Ready for your next interview round?</h3>
                             <p className="text-sm leading-7 text-slate-600">
@@ -91,7 +91,6 @@ export default function Footer() {
 
                         <p>© {year} Interview AI. Built for confident interview preparation.</p>
 
-                        {/* Contact Info */}
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
                                 <Phone className="w-4 h-4" />

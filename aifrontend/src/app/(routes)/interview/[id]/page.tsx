@@ -655,7 +655,7 @@ const InterviewSessionPage = () => {
             <h2 className="text-xl font-semibold text-slate-900">Chat Interface</h2>
             <p className="text-slate-500 text-sm">
               {interviewInfo
-                ? `${interviewInfo.topic} Interview • ${interviewInfo.totalQuestions} questions`
+                ? `${interviewInfo.topic} Interview  of 30 questions`
                 : 'Voice responses with text backup'}
             </p>
           </div>

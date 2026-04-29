@@ -264,53 +264,53 @@ export default function Home() {
         </section>
 
         <section id="about" className="scroll-mt-36 px-4 sm:px-6 lg:px-8 pb-24 pt-10 md:pb-32">
-          <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] border border-sky-400/20 bg-slate-950/85 p-6 shadow-2xl shadow-sky-950/30 backdrop-blur-xl lg:p-10">
-            <div className="absolute inset-x-6 top-6 h-px bg-gradient-to-r from-transparent via-sky-400/60 to-transparent" />
-            <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
-            <div className="space-y-6">
-              <div className="inline-flex items-center rounded-full border border-sky-400/40 bg-sky-500/15 px-4 py-1.5 text-sm font-medium text-sky-100">
-                About the product
-              </div>
-              <div className="space-y-4">
-                <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-slate-50">
-                  One interview platform that listens, analyzes, and guides every step.
-                </h2>
-                <p className="max-w-2xl text-base sm:text-lg leading-8 text-slate-200">
-                  Wavelength combines live AI evaluation, structured workspace management, and instant feedback so
-                  candidates can practice smarter and teams can review performance with confidence. It brings skill
-                  signals, strengths, gaps, and progress tracking into one focused product experience.
-                </p>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-sm uppercase tracking-[0.2em] text-sky-300">Live AI</p>
-                  <p className="mt-2 text-sm text-slate-200">Continuous analysis during interviews and practice sessions.</p>
+          <div className="mx-auto max-w-7xl overflow-hidden rounded-4xl border border-sky-200/70 bg-white/95 p-6 shadow-[0_28px_90px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:p-10">
+            <div className="absolute inset-x-6 top-6 h-px bg-linear-to-r from-transparent via-sky-400/70 to-transparent" />
+            <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="space-y-6">
+                <div className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-4 py-1.5 text-sm font-medium text-sky-700 shadow-sm">
+                  About the product
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-sm uppercase tracking-[0.2em] text-sky-300">Smart Feedback</p>
-                  <p className="mt-2 text-sm text-slate-200">Clear recommendations that highlight strengths and weak spots.</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-sm uppercase tracking-[0.2em] text-sky-300">Progress</p>
-                  <p className="mt-2 text-sm text-slate-200">Track improvement across sessions in one shared workspace.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative min-h-[320px] overflow-hidden rounded-[1.75rem] border border-sky-400/20 bg-slate-900/60">
-              <div className="absolute inset-0 bg-gradient-to-br from-sky-500/20 via-slate-900/20 to-indigo-500/25" />
-              <SoundWaveAnimation className="left-0 top-1/2 h-full -translate-y-1/2 opacity-90" />
-              <div className="relative z-10 flex h-full flex-col justify-end p-6 sm:p-8">
-                <div className="max-w-sm space-y-3 rounded-3xl border border-white/10 bg-slate-950/70 p-5 backdrop-blur-md">
-                  <p className="text-sm font-medium uppercase tracking-[0.25em] text-sky-300">AI insight layer</p>
-                  <p className="text-sm leading-6 text-slate-100">
-                    The animated waveform represents the product’s live reasoning engine: it captures signals,
-                    interprets responses, and turns every session into actionable feedback.
+                <div className="space-y-4">
+                  <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-slate-900">
+                    One interview platform that listens, analyzes, and guides every step.
+                  </h2>
+                  <p className="max-w-2xl text-base sm:text-lg leading-8 text-slate-600">
+                    Wavelength combines live AI evaluation, structured workspace management, and instant feedback so
+                    candidates can practice smarter and teams can review performance with confidence. It brings skill
+                    signals, strengths, gaps, and progress tracking into one focused product experience.
                   </p>
                 </div>
+
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-slate-200 bg-linear-to-br from-sky-50 to-white p-4 shadow-sm">
+                    <p className="text-sm uppercase tracking-[0.2em] text-sky-600">Live AI</p>
+                    <p className="mt-2 text-sm text-slate-600">Continuous analysis during interviews and practice sessions.</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-linear-to-br from-emerald-50 to-white p-4 shadow-sm">
+                    <p className="text-sm uppercase tracking-[0.2em] text-emerald-600">Smart Feedback</p>
+                    <p className="mt-2 text-sm text-slate-600">Clear recommendations that highlight strengths and weak spots.</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-linear-to-br from-violet-50 to-white p-4 shadow-sm">
+                    <p className="text-sm uppercase tracking-[0.2em] text-violet-600">Progress</p>
+                    <p className="mt-2 text-sm text-slate-600">Track improvement across sessions in one shared workspace.</p>
+                  </div>
+                </div>
               </div>
-            </div>
+
+              <div className="relative min-h-80 overflow-hidden rounded-[1.75rem] border border-sky-200 bg-linear-to-br from-sky-50 via-white to-indigo-50">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.22),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(99,102,241,0.14),transparent_30%)]" />
+                <SoundWaveAnimation className="left-0 top-1/2 h-full -translate-y-1/2 opacity-85" />
+                <div className="relative z-10 flex h-full flex-col justify-end p-6 sm:p-8">
+                  <div className="max-w-sm space-y-3 rounded-3xl border border-white/70 bg-white/85 p-5 shadow-lg backdrop-blur-md">
+                    <p className="text-sm font-medium uppercase tracking-[0.25em] text-sky-600">AI insight layer</p>
+                    <p className="text-sm leading-6 text-slate-600">
+                      The animated waveform represents the product’s live reasoning engine: it captures signals,
+                      interprets responses, and turns every session into actionable feedback.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -331,7 +331,7 @@ export default function Home() {
                 <div className="relative group max-w-full">
                   <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
                   <Image
-                    src="/ai.webp"
+                    src="/first.png"
                     alt="AI illustration"
                     width={600}
                     height={450}
@@ -341,11 +341,11 @@ export default function Home() {
               </div>
               <div className="w-full lg:w-1/2 text-center lg:text-left">
                 <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
-                  Real-Time AI Analysis
+                 AI-Powered Interview Generation
                 </h2>
                 <p className="text-xl sm:text-2xl text-gray-400 leading-relaxed">
-                  Harness the power of advanced AI to analyze social media trends in real-time. Our intelligent system
-                  processes millions of data points to give you actionable insights that drive engagement and growth.
+                Effortlessly generate high-quality, topic-specific interview questions using 
+                advanced AI, helping you prepare smarter and faster without manual effort.
                 </p>
               </div>
             </div>
@@ -360,7 +360,7 @@ export default function Home() {
                 <div className="relative group max-w-full">
                   <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 to-pink-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
                   <Image
-                    src="/ai.webp"
+                    src="/second.png"
                     alt="AI illustration"
                     width={600}
                     height={450}
@@ -370,11 +370,11 @@ export default function Home() {
               </div>
               <div className="w-full lg:w-1/2 text-center lg:text-left">
                 <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
-                  Smart Content Optimization
+                 Real-Time AI Evaluation & Feedback
                 </h2>
                 <p className="text-xl sm:text-2xl text-gray-400 leading-relaxed">
-                  Transform your content strategy with AI-powered optimization. Our platform adapts your messaging
-                  for each social media platform, ensuring maximum reach and engagement across all channels.
+                 Receive instant AI-driven evaluation for every response, including correctness, detailed explanations,
+                  and improved answers to accelerate your learning.
                 </p>
               </div>
             </div>
@@ -389,7 +389,7 @@ export default function Home() {
                 <div className="relative group max-w-full">
                   <div className="absolute -inset-4 bg-gradient-to-r from-green-500/20 to-blue-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
                   <Image
-                    src="/ai.webp"
+                    src="/third.png"
                     alt="AI illustration"
                     width={600}
                     height={450}
@@ -399,11 +399,11 @@ export default function Home() {
               </div>
               <div className="w-full lg:w-1/2 text-center lg:text-left">
                 <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
-                  Predictive Trend Analysis
+                 Advanced Performance Analytics
                 </h2>
                 <p className="text-xl sm:text-2xl text-gray-400 leading-relaxed">
-                  Stay ahead of the curve with our predictive analytics. Identify emerging trends before they go viral
-                  and position your brand at the forefront of social media conversations.
+                 Gain deep insights into your performance with accuracy tracking, weak topic 
+                 identification, and progress monitoring across multiple interviews.
                 </p>
               </div>
             </div>
@@ -418,7 +418,7 @@ export default function Home() {
                 <div className="relative group max-w-full">
                   <div className="absolute -inset-4 bg-gradient-to-r from-orange-500/20 to-red-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
                   <Image
-                    src="/ai.webp"
+                    src="/four.png"
                     alt="AI illustration"
                     width={600}
                     height={450}
@@ -428,11 +428,10 @@ export default function Home() {
               </div>
               <div className="w-full lg:w-1/2 text-center lg:text-left">
                 <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r  from-blue-400 to-purple-600">
-                  Advanced Analytics Dashboard
+                  Seamless Workspace & Interview Management
                 </h2>
                 <p className="text-xl sm:text-2xl text-gray-400 leading-relaxed">
-                  Get comprehensive insights with our intuitive dashboard. Track performance metrics, audience sentiment,
-                  and engagement patterns with beautiful visualizations and actionable recommendations.
+                 Organize, manage, and share your interviews efficiently within structured workspaces designed for smooth collaboration and easy access.
                 </p>
               </div>
             </div>

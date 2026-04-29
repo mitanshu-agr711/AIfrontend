@@ -319,7 +319,7 @@ const FeedbackPage = () => {
               </a>
             </li>
             <li>
-              <a href="/about" className="px-4 py-2 rounded-full transition-all  hover:text-white hover:bg-sky-600">
+              <a href="/home#about" className="px-4 py-2 rounded-full transition-all hover:text-white hover:bg-sky-600">
                 About
               </a>
             </li>
@@ -407,7 +407,7 @@ const FeedbackPage = () => {
             </li>
             <li>
               <a
-                href="/about"
+                href="/home#about"
                 className="block px-6 py-2 rounded-full hover:bg-sky-100 hover:text-sky-600 dark:hover:bg-gray-800 w-full text-center"
                 onClick={() => setMenuOpen(false)}
               >
