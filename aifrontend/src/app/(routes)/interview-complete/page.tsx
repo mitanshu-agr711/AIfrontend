@@ -1,17 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { CheckCircle, BarChart3, Home, ArrowRight, Loader2, Clock3, CircleCheckBig, CircleX } from "lucide-react";
 import { Button } from "@/components/button";
 import { GradientBackground } from "@/components/gradient-background";
-import { useAuthStore } from "@/stores/authStore";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
+import { useAuthStore } from "@/stores/authStore";
 
 type InterviewDetailResponse = {
   interview: {
     id: string;
+    attemptId?: string;
     title: string;
     topic: string;
     status: string;
@@ -32,13 +33,42 @@ type InterviewDetailResponse = {
   }>;
 };
 
+type UserAnalyticsInterview = {
+  attemptId?: string;
+  title?: string;
+  topic?: string;
+  status?: string;
+  createdAt?: string;
+};
+
+type UserAnalyticsResponse = {
+  recentInterviews?: UserAnalyticsInterview[];
+};
+
+const resolveLatestCompletedAttemptId = (recentInterviews: UserAnalyticsInterview[] = []) => {
+  if (!recentInterviews.length) return "";
+
+  const sortedInterviews = [...recentInterviews].sort((a, b) => {
+    const aTime = new Date(a.createdAt || 0).getTime();
+    const bTime = new Date(b.createdAt || 0).getTime();
+    return bTime - aTime;
+  });
+
+  const completedInterview = sortedInterviews.find(
+    (item) => (item.status || "").toLowerCase() === "completed" && item.attemptId
+  );
+
+  return completedInterview?.attemptId || sortedInterviews[0]?.attemptId || "";
+};
+
 const InterviewCompletePage = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const interviewId = searchParams.get("interviewId") || "";
   const { isAuthenticated, hydrated } = useAuthStore();
+
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState<InterviewDetailResponse | null>(null);
+  const [emptyStateMessage, setEmptyStateMessage] = useState<string | null>(null);
+  const [resolvedAttemptId, setResolvedAttemptId] = useState("");
 
   useEffect(() => {
     const init = async () => {
@@ -52,41 +82,51 @@ const InterviewCompletePage = () => {
         }
       }
 
-      if (!interviewId) {
-        setLoading(false);
-        return;
-      }
-
       try {
-        // Add delay to ensure backend has processed the interview
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const result = (await api.getInterviewDetails(interviewId)) as InterviewDetailResponse;
-        console.log("Interview details loaded:", result);
-        setDetails(result);
+        setLoading(true);
+        setDetails(null);
+        setEmptyStateMessage(null);
+        setResolvedAttemptId("");
+
+        // Give the backend a short moment to persist the completed attempt.
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        const analyticsResult = (await api.getUserAnalytics()) as UserAnalyticsResponse;
+        const latestAttemptId = resolveLatestCompletedAttemptId(analyticsResult.recentInterviews || []);
+
+        if (!latestAttemptId) {
+          setEmptyStateMessage(
+            "Please complete your interview first. Answer at least one question and finish the interview to see the completion summary."
+          );
+          return;
+        }
+
+        const analysis = (await api.getInterviewDetails(latestAttemptId)) as InterviewDetailResponse;
+        setResolvedAttemptId(latestAttemptId);
+        setDetails(analysis);
       } catch (error) {
         console.error("Failed to load interview details:", error);
+        setEmptyStateMessage(
+          "We could not load the latest completed interview summary right now. Please try again after finishing an interview."
+        );
       } finally {
         setLoading(false);
       }
     };
 
-    init();
-  }, [hydrated, isAuthenticated, router, interviewId]);
+    void init();
+  }, [hydrated, isAuthenticated, router]);
 
   const totalDurationMins = useMemo(() => {
     if (!details) return 0;
-    
-    // First priority: use totalTimeTakenSeconds from analytics if available
+
     if (details.analytics.totalTimeTakenSeconds && details.analytics.totalTimeTakenSeconds > 0) {
       return Math.round(details.analytics.totalTimeTakenSeconds / 60);
     }
-    
-    // Second priority: sum up individual question times
+
     const secondsFromAnswers = details.questionsWithAnswers.reduce((sum, q) => sum + (q.timeTaken || 0), 0);
     if (secondsFromAnswers > 0) return Math.round(secondsFromAnswers / 60);
 
-    // Fallback: use startedAt and completedAt timestamps
     if (details.interview.startedAt && details.interview.completedAt) {
       const start = new Date(details.interview.startedAt).getTime();
       const end = new Date(details.interview.completedAt).getTime();
@@ -94,6 +134,7 @@ const InterviewCompletePage = () => {
         return Math.round((end - start) / 60000);
       }
     }
+
     return 0;
   }, [details]);
 
@@ -111,7 +152,40 @@ const InterviewCompletePage = () => {
     );
   }
 
-  const analytics = details?.analytics;
+  if (emptyStateMessage || !details) {
+    return (
+      <>
+        <GradientBackground />
+        <div className="min-h-screen flex flex-col items-center justify-center p-6">
+          <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-2xl w-full text-center border">
+            <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-10 h-10 text-amber-500" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">No completed interview found</h1>
+            <p className="text-gray-600 mb-8">{emptyStateMessage}</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button variant="outline" className="w-full" asChild>
+                <Link href="/workspace" className="flex items-center justify-center gap-2">
+                  Start Interview
+                </Link>
+              </Button>
+
+              <Button className="w-full bg-blue-500 hover:bg-blue-600" asChild>
+                <Link href="/feedback" className="flex items-center justify-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  Go to Feedback
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  const analytics = details.analytics;
+  const feedbackHref = resolvedAttemptId ? `/feedback?interviewId=${resolvedAttemptId}` : "/feedback";
 
   return (
     <>
@@ -124,25 +198,25 @@ const InterviewCompletePage = () => {
             </div>
             <h1 className="text-4xl font-bold text-gray-800 mb-4">Interview Completed Successfully!</h1>
             <p className="text-xl text-gray-600">Great job! Your interview has been processed by the AI system.</p>
-            {details?.interview && (
-              <p className="text-sm text-gray-500 mt-3">
-                {details.interview.title} • {details.interview.topic}
-              </p>
-            )}
+            <p className="text-sm text-gray-500 mt-3">
+              {details.interview.title} • {details.interview.topic}
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-blue-50 rounded-xl p-4">
               <div className="flex items-center justify-center gap-2 text-blue-600">
                 <Clock3 className="w-5 h-5" />
-                <span className="text-2xl font-bold">{totalDurationMins === 0 && loading ? "..." : totalDurationMins} min</span>
+                <span className="text-2xl font-bold">{totalDurationMins} min</span>
               </div>
               <div className="text-sm text-gray-600">Duration</div>
             </div>
             <div className="bg-green-50 rounded-xl p-4">
               <div className="flex items-center justify-center gap-2 text-green-600">
                 <CircleCheckBig className="w-5 h-5" />
-                <span className="text-2xl font-bold">{analytics ? `${analytics.correctAnswers ?? 0}/${analytics.totalQuestions ?? 0}` : "0/0"}</span>
+                <span className="text-2xl font-bold">
+                  {analytics ? `${analytics.correctAnswers ?? 0}/${analytics.totalQuestions ?? 0}` : "0/0"}
+                </span>
               </div>
               <div className="text-sm text-gray-600">Correct Answers</div>
             </div>
@@ -167,7 +241,7 @@ const InterviewCompletePage = () => {
               </div>
               <div className="bg-white border rounded-xl p-4">
                 <div className="text-xs text-slate-500">Unanswered</div>
-                <div className="text-xl font-bold text-amber-600">{analytics.unansweredQuestions}</div>
+                <div className="text-xl font-bold text-amber-600">{30 - analytics.answeredQuestions}</div>
               </div>
               <div className="bg-white border rounded-xl p-4">
                 <div className="text-xs text-slate-500">Total Questions</div>
@@ -178,7 +252,7 @@ const InterviewCompletePage = () => {
 
           <div className="space-y-4">
             <Button size="lg" className="w-full bg-blue-500 hover:bg-blue-600" asChild>
-              <Link href={interviewId ? `/feedback?interviewId=${interviewId}` : "/feedback"} className="flex items-center justify-center gap-3">
+              <Link href={feedbackHref} className="flex items-center justify-center gap-3">
                 <BarChart3 className="w-5 h-5" />
                 View Detailed Feedback & Progress
                 <ArrowRight className="w-5 h-5" />

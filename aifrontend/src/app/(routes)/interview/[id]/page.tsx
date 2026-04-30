@@ -7,6 +7,7 @@ import { Button } from '@/components/button'
 import { Mic, MicOff, Volume2, VolumeX, ChevronRight, Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { api } from '@/lib/api'
+import { AppError } from '@/lib/errorHandler'
 
 interface Question {
   id?: string
@@ -78,6 +79,7 @@ const InterviewSessionPage = () => {
   const [fullscreenExitCount, setFullscreenExitCount] = useState(0)
   const [speechError, setSpeechError] = useState<string | null>(null)
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now())
+  const [showingCorrectAnswer, setShowingCorrectAnswer] = useState(false)
 
   const chatEndRef = useRef<HTMLDivElement>(null)
   const interviewSubmittedRef = useRef(false)
@@ -90,6 +92,8 @@ const InterviewSessionPage = () => {
   const streamBotMessage = useCallback(async (message: string, delayMs = 110) => {
     const words = message.trim().split(/\s+/).filter(Boolean)
 
+    let speechSynthesisPromise: Promise<void> = Promise.resolve()
+
     if (typeof window !== 'undefined' && !isMuted && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel()
       const utterance = new SpeechSynthesisUtterance(message)
@@ -97,7 +101,23 @@ const InterviewSessionPage = () => {
       utterance.pitch = 1
       utterance.volume = 1
       speechSynthesisRef.current = utterance
-      window.speechSynthesis.speak(utterance)
+
+      // Create promise that resolves when speech synthesis finishes
+      speechSynthesisPromise = new Promise<void>((resolve) => {
+        const onEnd = () => {
+          utterance.removeEventListener('end', onEnd)
+          utterance.removeEventListener('error', onError)
+          resolve()
+        }
+        const onError = () => {
+          utterance.removeEventListener('end', onEnd)
+          utterance.removeEventListener('error', onError)
+          resolve() // Resolve on error too so flow continues
+        }
+        utterance.addEventListener('end', onEnd)
+        utterance.addEventListener('error', onError)
+        window.speechSynthesis.speak(utterance)
+      })
     }
 
     if (streamTimeoutRef.current) {
@@ -107,35 +127,41 @@ const InterviewSessionPage = () => {
 
     if (words.length === 0) {
       setChatLog(prev => [...prev, { role: 'bot', text: message }])
+      // Wait for speech to complete before returning
+      await speechSynthesisPromise
       return
     }
 
     setChatLog(prev => [...prev, { role: 'bot', text: '' }])
 
-    await new Promise<void>((resolve) => {
-      let index = 0
+    // Wait for both text streaming and speech synthesis to complete
+    await Promise.all([
+      new Promise<void>((resolve) => {
+        let index = 0
 
-      const emitWord = () => {
-        index += 1
-        const partial = words.slice(0, index).join(' ')
+        const emitWord = () => {
+          index += 1
+          const partial = words.slice(0, index).join(' ')
 
-        setChatLog(prev => {
-          if (prev.length === 0) return [{ role: 'bot', text: partial }]
-          const updated = [...prev]
-          updated[updated.length - 1] = { role: 'bot', text: partial }
-          return updated
-        })
+          setChatLog(prev => {
+            if (prev.length === 0) return [{ role: 'bot', text: partial }]
+            const updated = [...prev]
+            updated[updated.length - 1] = { role: 'bot', text: partial }
+            return updated
+          })
 
-        if (index < words.length) {
-          streamTimeoutRef.current = setTimeout(emitWord, delayMs)
-          return
+          if (index < words.length) {
+            streamTimeoutRef.current = setTimeout(emitWord, delayMs)
+            return
+          }
+          streamTimeoutRef.current = null
+          resolve()
         }
-        streamTimeoutRef.current = null
-        resolve()
-      }
 
-      streamTimeoutRef.current = setTimeout(emitWord, delayMs)
-    })
+        streamTimeoutRef.current = setTimeout(emitWord, delayMs)
+      }),
+      speechSynthesisPromise,
+    ])
   }, [isMuted])
 
   useEffect(() => {
@@ -328,7 +354,7 @@ const InterviewSessionPage = () => {
     }
 
     // Remove interview-mode class immediately so global footer becomes visible
-    try { document.body.classList.remove('interview-mode') } catch (e) { /* ignore */ }
+    try { document.body.classList.remove('interview-mode') } catch { /* ignore */ }
 
     // Give backend time to process data (short delay)
     await new Promise(resolve => setTimeout(resolve, 1200))
@@ -410,8 +436,28 @@ const InterviewSessionPage = () => {
     return question.id || question._id || question.questionId || ''
   }
 
+  const asRecord = (value: unknown): Record<string, unknown> => {
+    return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {}
+  }
+
+  const pickString = (obj: Record<string, unknown>, keys: string[]): string => {
+    for (const key of keys) {
+      const value = obj[key]
+      if (typeof value === 'string' && value.trim()) return value.trim()
+    }
+    return ''
+  }
+
+  const pickBoolean = (obj: Record<string, unknown>, keys: string[]): boolean | undefined => {
+    for (const key of keys) {
+      const value = obj[key]
+      if (typeof value === 'boolean') return value
+    }
+    return undefined
+  }
+
   const handleSubmitAnswer = async () => {
-    if (!userAnswer.trim() || submitting || isSpeaking || !questions[currentIndex]) return
+    if (!userAnswer.trim() || submitting || isSpeaking || showingCorrectAnswer || !questions[currentIndex]) return
 
     const question = questions[currentIndex]
     const elapsed = Math.floor((Date.now() - questionStartTime) / 1000)
@@ -428,10 +474,11 @@ const InterviewSessionPage = () => {
     setIsListening(false)
 
     let submitSuccess = false
+    let submitResponse: unknown = null
 
     try {
       setSubmitting(true)
-      await api.submitAnswer({
+      submitResponse = await api.submitAnswer({
         interviewId,
         questionId: resolvedQuestionId,
         userAnswer: answerToSubmit,
@@ -445,6 +492,65 @@ const InterviewSessionPage = () => {
     }
 
     if (!submitSuccess) return
+
+    const submitRecord = asRecord(submitResponse)
+    const nestedData = asRecord(submitRecord.data)
+    const submitCorrect = pickBoolean(submitRecord, ['correct', 'isCorrect']) ?? pickBoolean(nestedData, ['correct', 'isCorrect'])
+    const submitCorrectAnswer =
+      pickString(submitRecord, ['correctAnswer', 'correct_answer', 'answer']) ||
+      pickString(nestedData, ['correctAnswer', 'correct_answer', 'answer'])
+    const submitExplanation =
+      pickString(submitRecord, ['explanation', 'correctedAnswer', 'reason']) ||
+      pickString(nestedData, ['explanation', 'correctedAnswer', 'reason'])
+
+    setShowingCorrectAnswer(true)
+    let feedbackMessage = 'Answer received. Checking result...'
+    let statusIsCorrect: boolean | undefined
+    let statusShortReason = ''
+
+    try {
+      let statusResult: { isCorrect: boolean; shortReason: string } | null = null
+
+      // Backend may take a moment to persist evaluation; retry quickly before falling back.
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          const result = await api.getQuestionStatus(resolvedQuestionId)
+          statusResult = { isCorrect: result.isCorrect, shortReason: result.shortReason }
+          break
+        } catch (statusErr) {
+          if (statusErr instanceof AppError && statusErr.statusCode === 404 && attempt < 2) {
+            await new Promise(resolve => setTimeout(resolve, 250))
+            continue
+          }
+          throw statusErr
+        }
+      }
+
+      if (statusResult) {
+        statusIsCorrect = statusResult.isCorrect
+        statusShortReason = statusResult.shortReason || ''
+      }
+    } catch (err) {
+      if (err instanceof AppError && err.statusCode === 404) {
+        feedbackMessage = 'No evaluation found yet for this question.'
+      } else {
+        console.error('Failed to fetch question status:', err)
+      }
+    }
+
+    const resolvedIsCorrect = statusIsCorrect ?? submitCorrect
+
+    if (resolvedIsCorrect === true) {
+      feedbackMessage = 'Well done. Your answer is correct.'
+    } else if (resolvedIsCorrect === false) {
+      // const reasonText = statusShortReason || submitExplanation || 'Please review this concept and try again.'
+      feedbackMessage = `Your answer is wrong. The correct answer is ${submitCorrectAnswer || 'not available'}`
+    }
+
+    setIsSpeaking(true)
+    await streamBotMessage(feedbackMessage)
+    setIsSpeaking(false)
+    setShowingCorrectAnswer(false)
 
     const nextIndex = currentIndex + 1
     setQuestionStartTime(Date.now())
@@ -547,7 +653,8 @@ const InterviewSessionPage = () => {
         </Button>
         <Button
           onClick={() => setShowEndConfirm(true)}
-          className="bg-rose-500/90 backdrop-blur-sm hover:bg-rose-600 text-white shadow-lg cursor-pointer"
+          disabled={showingCorrectAnswer}
+          className="bg-rose-500/90 backdrop-blur-sm hover:bg-rose-600 text-white shadow-lg cursor-pointer disabled:opacity-50"
         >
           End Interview
         </Button>
@@ -638,7 +745,7 @@ const InterviewSessionPage = () => {
             <Button
               onClick={handleMicToggle}
               variant={isListening ? 'default' : 'outline'}
-              disabled={finished}
+              disabled={finished || showingCorrectAnswer || isSpeaking}
               className={`${
                 isListening ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-white hover:bg-slate-50'
               } backdrop-blur-sm border-slate-200 text-slate-700 cursor-pointer`}
@@ -675,6 +782,12 @@ const InterviewSessionPage = () => {
 
           {!finished && (
             <div className="p-4 border-t border-slate-200 bg-white/90">
+              {showingCorrectAnswer && (
+                <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                  <p className="text-xs text-amber-600 font-semibold mb-1">Correct Answer Feedback</p>
+                  <p className="text-sm text-amber-900">Listening to the correct answer...</p>
+                </div>
+              )}
               <textarea
                 value={userAnswer}
                 onChange={e => setUserAnswer(e.target.value)}
@@ -684,14 +797,16 @@ const InterviewSessionPage = () => {
                 rows={3}
                 placeholder="Type your answer here... (Enter to submit)"
                 className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 placeholder-slate-400 text-sm resize-none outline-none focus:border-sky-400 transition mb-2"
-                disabled={submitting}
+                disabled={submitting || showingCorrectAnswer}
               />
               <Button
                 onClick={handleSubmitAnswer}
-                disabled={!userAnswer.trim() || submitting}
+                disabled={!userAnswer.trim() || submitting || showingCorrectAnswer}
                 className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold cursor-pointer disabled:opacity-50"
               >
-                {submitting ? (
+                {showingCorrectAnswer ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Waiting for feedback...</>
+                ) : submitting ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Submitting...</>
                 ) : (
                   <><ChevronRight className="w-4 h-4 mr-2" />

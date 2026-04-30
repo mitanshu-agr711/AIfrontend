@@ -7,7 +7,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { GradientBackground } from "@/components/gradient-background"
-import { useScrollTransform } from "@/components/image";
 import { useState } from "react";
 import { Menu, PanelRightClose } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -21,6 +20,9 @@ export default function Home() {
   const router = useRouter();
 
   const [profileOpen, setProfileOpen] = useState(false);
+  const [zoomPreview, setZoomPreview] = useState<{ src: string; alt: string } | null>(null);
+  const [zoomLevel, setZoomLevel] = useState(2);
+  const zoomClasses = ["scale-75", "scale-90", "scale-100", "scale-110", "scale-125", "scale-150"];
 
 
 
@@ -31,28 +33,25 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
 
-  const [leftRef1, leftStyle1] = useScrollTransform({
-    fromX: -100, toX: 0, fromRot: -15, toRot: 0
-  }) as [React.RefObject<HTMLDivElement>, React.CSSProperties];
-
-  const [leftRef2, leftStyle2] = useScrollTransform({
-    fromX: -120, toX: 0, fromRot: -18, toRot: 0
-  }) as [React.RefObject<HTMLDivElement>, React.CSSProperties];
-
-  const [rightRef, rightStyle] = useScrollTransform({
-    fromX: 100, toX: 0, fromRot: 15, toRot: 0
-  }) as [React.RefObject<HTMLDivElement>, React.CSSProperties];
-
-  const [rightRef2, rightStyle2] = useScrollTransform({
-    fromX: 120, toX: 0, fromRot: 18, toRot: 0
-  }) as [React.RefObject<HTMLDivElement>, React.CSSProperties];
-
   const handleLogout = async () => {
     await api.logout();
     setProfileOpen(false);
     setMenuOpen(false);
     router.replace("/register");
   };
+
+  const openZoomPreview = (src: string, alt: string) => {
+    setZoomPreview({ src, alt });
+    setZoomLevel(2);
+  };
+
+  const closeZoomPreview = () => {
+    setZoomPreview(null);
+    setZoomLevel(2);
+  };
+
+  const zoomIn = () => setZoomLevel((current) => Math.min(current + 1, zoomClasses.length - 1));
+  const zoomOut = () => setZoomLevel((current) => Math.max(current - 1, 0));
 
   // const { isUserLoggedIn } = useAuthStore();
 
@@ -123,7 +122,7 @@ export default function Home() {
                 </div>
               ) : (
                 <button
-                  className="bg-gradient-to-r from-sky-500 to-blue-500 text-white px-6 py-2 rounded-full shadow-md hover:from-sky-600 hover:to-blue-600 transition-all cursor-pointer"
+                  className="bg-linear-to-r from-sky-500 to-blue-500 text-white px-6 py-2 rounded-full shadow-md hover:from-sky-600 hover:to-blue-600 transition-all cursor-pointer"
                   onClick={() => {
                     setShowAuth(true);
                     setMenuOpen(false);
@@ -216,7 +215,7 @@ export default function Home() {
                 </div>
               ) : (
                 <button
-                  className="bg-gradient-to-r from-sky-500 to-blue-500 text-white px-6 py-2 rounded-full shadow-md hover:from-sky-600 hover:to-blue-600 transition-all cursor-pointer"
+                  className="bg-linear-to-r from-sky-500 to-blue-500 text-white px-6 py-2 rounded-full shadow-md hover:from-sky-600 hover:to-blue-600 transition-all cursor-pointer"
                   onClick={() => {
                     setShowAuth(true);
                     setMenuOpen(false);
@@ -235,10 +234,71 @@ export default function Home() {
         mode="modal"
       />
 
+      {zoomPreview && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 px-4 py-8 backdrop-blur-sm"
+          onClick={closeZoomPreview}
+        >
+          <div
+            className="w-full max-w-6xl rounded-4xl border border-white/15 bg-slate-900/95 p-4 shadow-[0_35px_100px_rgba(15,23,42,0.6)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3 pb-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300">Image preview</p>
+                <h3 className="mt-1 text-lg font-semibold text-white">{zoomPreview.alt}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={closeZoomPreview}
+                className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="flex items-center justify-center overflow-hidden rounded-3xl bg-black/30 p-3">
+              <Image
+                src={zoomPreview.src}
+                alt={zoomPreview.alt}
+                width={1400}
+                height={1000}
+                className={`h-auto max-h-[72vh] w-auto max-w-full select-none rounded-2xl object-contain transition-transform duration-200 ${zoomClasses[zoomLevel]}`}
+                priority
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
+              <button
+                type="button"
+                onClick={zoomOut}
+                className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
+              >
+                Zoom Out
+              </button>
+              <button
+                type="button"
+                onClick={() => setZoomLevel(2)}
+                className="rounded-full border border-sky-400/30 bg-sky-500/20 px-4 py-2 text-sm font-medium text-sky-100 transition hover:bg-sky-500/30"
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                onClick={zoomIn}
+                className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/20"
+              >
+                Zoom In
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="flex-1 sm:mt-30 mt-40 ">
         <section className="flex justify-center items-center space-y-6 pb-8 pt-6 md:pb-12 md:pt-10 lg:py-32 overflow-hidden">
           <SoundWaveAnimation className="top-1/2 -translate-y-1/2" />
-          <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center relative z-10">
+          <div className="container flex max-w-5xl flex-col items-center gap-4 text-center relative z-10">
             <div className="rounded-full bg-blue-100 backdrop-blur-sm px-4 py-1.5 text-sm font-medium text-blue-700 border border-primary/20">
               Introducing Wavelength
             </div>
@@ -247,7 +307,7 @@ export default function Home() {
                 AI that senses skills, strengths, weaknesses.
               </h1>
             </div>
-            <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8 glass-effect p-4 rounded-lg">
+            <p className="max-w-2xl leading-normal text-muted-foreground sm:text-xl sm:leading-8 glass-effect p-4 rounded-lg">
               Experience real-time AI analysis, smart content optimization, predictive trend insights, and a powerful advanced analytics dashboard—all in one intelligent interview platform.
             </p>
             <div className="flex flex-wrap justify-center gap-4 mt-6">
@@ -263,7 +323,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="about" className="scroll-mt-36 px-4 sm:px-6 lg:px-8 pb-24 pt-10 md:pb-32">
+        <section id="about" className="scroll-mt-32 px-4 sm:px-6 lg:px-8 pb-24 pt-10 md:pb-32">
           <div className="mx-auto max-w-7xl overflow-hidden rounded-4xl border border-sky-200/70 bg-white/95 p-6 shadow-[0_28px_90px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:p-10">
             <div className="absolute inset-x-6 top-6 h-px bg-linear-to-r from-transparent via-sky-400/70 to-transparent" />
             <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
@@ -284,15 +344,15 @@ export default function Home() {
 
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="rounded-2xl border border-slate-200 bg-linear-to-br from-sky-50 to-white p-4 shadow-sm">
-                    <p className="text-sm uppercase tracking-[0.2em] text-sky-600">Live AI</p>
+                    <p className="text-sm uppercase tracking-widest text-sky-600">Live AI</p>
                     <p className="mt-2 text-sm text-slate-600">Continuous analysis during interviews and practice sessions.</p>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-linear-to-br from-emerald-50 to-white p-4 shadow-sm">
-                    <p className="text-sm uppercase tracking-[0.2em] text-emerald-600">Smart Feedback</p>
+                    <p className="text-sm uppercase tracking-widest text-emerald-600">Smart Feedback</p>
                     <p className="mt-2 text-sm text-slate-600">Clear recommendations that highlight strengths and weak spots.</p>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-linear-to-br from-violet-50 to-white p-4 shadow-sm">
-                    <p className="text-sm uppercase tracking-[0.2em] text-violet-600">Progress</p>
+                    <p className="text-sm uppercase tracking-widest text-violet-600">Progress</p>
                     <p className="mt-2 text-sm text-slate-600">Track improvement across sessions in one shared workspace.</p>
                   </div>
                 </div>
@@ -320,27 +380,24 @@ export default function Home() {
 
         <section id="features" className="py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
           <div className="max-w-7xl mx-auto space-y-32 overflow-hidden">
-            <h1 className="font-bold text-[4rem] sm:text-[5rem] lg:text-[10rem] text-transparent  bg-clip-text bg-gradient-to-r from-blue-700 via-white to-blue-500">Features</h1>
+            <h1 className="font-bold text-6xl sm:text-7xl lg:text-8xl text-transparent bg-clip-text bg-linear-to-r from-blue-700 via-white to-blue-500">Features</h1>
 
             <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-20 overflow-hidden">
-              <div
-                ref={leftRef1}
-                style={leftStyle1}
-                className="w-full lg:w-1/2 transition-all duration-700 ease-out max-w-full"
-              >
+              <div className="w-full lg:w-1/2 transition-all duration-700 ease-out max-w-full">
                 <div className="relative group max-w-full">
-                  <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+                  <div className="absolute -inset-4 bg-linear-to-r from-blue-500/20 to-purple-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
                   <Image
                     src="/first.png"
                     alt="AI illustration"
                     width={600}
                     height={450}
-                    className="relative rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500 max-w-full h-auto"
+                    onClick={() => openZoomPreview("/first.png", "AI illustration")}
+                    className="relative rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500 max-w-full h-auto cursor-zoom-in"
                   />
                 </div>
               </div>
               <div className="w-full lg:w-1/2 text-center lg:text-left">
-                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-600">
                  AI-Powered Interview Generation
                 </h2>
                 <p className="text-xl sm:text-2xl text-gray-400 leading-relaxed">
@@ -352,24 +409,21 @@ export default function Home() {
 
 
             <div className="flex flex-col lg:flex-row-reverse items-center justify-between gap-16 lg:gap-20 overflow-hidden">
-              <div
-                ref={rightRef}
-                style={rightStyle}
-                className="w-full lg:w-1/2 transition-all duration-700 ease-out max-w-full"
-              >
+              <div className="w-full lg:w-1/2 transition-all duration-700 ease-out max-w-full">
                 <div className="relative group max-w-full">
-                  <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 to-pink-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+                  <div className="absolute -inset-4 bg-linear-to-r from-purple-500/20 to-pink-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
                   <Image
                     src="/second.png"
                     alt="AI illustration"
                     width={600}
                     height={450}
-                    className="relative rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500 max-w-full h-auto"
+                    onClick={() => openZoomPreview("/second.png", "AI illustration")}
+                    className="relative rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500 max-w-full h-auto cursor-zoom-in"
                   />
                 </div>
               </div>
               <div className="w-full lg:w-1/2 text-center lg:text-left">
-                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-600">
                  Real-Time AI Evaluation & Feedback
                 </h2>
                 <p className="text-xl sm:text-2xl text-gray-400 leading-relaxed">
@@ -381,24 +435,21 @@ export default function Home() {
 
 
             <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-20 overflow-hidden">
-              <div
-                ref={leftRef2}
-                style={leftStyle2}
-                className="w-full lg:w-1/2 transition-all duration-700 ease-out max-w-full"
-              >
+              <div className="w-full lg:w-1/2 transition-all duration-700 ease-out max-w-full">
                 <div className="relative group max-w-full">
-                  <div className="absolute -inset-4 bg-gradient-to-r from-green-500/20 to-blue-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+                  <div className="absolute -inset-4 bg-linear-to-r from-green-500/20 to-blue-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
                   <Image
                     src="/third.png"
                     alt="AI illustration"
                     width={600}
                     height={450}
-                    className="relative rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500 max-w-full h-auto"
+                    onClick={() => openZoomPreview("/third.png", "AI illustration")}
+                    className="relative rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500 max-w-full h-auto cursor-zoom-in"
                   />
                 </div>
               </div>
               <div className="w-full lg:w-1/2 text-center lg:text-left">
-                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-600">
                  Advanced Performance Analytics
                 </h2>
                 <p className="text-xl sm:text-2xl text-gray-400 leading-relaxed">
@@ -410,24 +461,21 @@ export default function Home() {
 
 
             <div className="flex flex-col lg:flex-row-reverse items-center justify-between gap-16 lg:gap-20 overflow-hidden">
-              <div
-                ref={rightRef2}
-                style={rightStyle2}
-                className="w-full lg:w-1/2 transition-all duration-700 ease-out max-w-full"
-              >
+              <div className="w-full lg:w-1/2 transition-all duration-700 ease-out max-w-full">
                 <div className="relative group max-w-full">
-                  <div className="absolute -inset-4 bg-gradient-to-r from-orange-500/20 to-red-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+                  <div className="absolute -inset-4 bg-linear-to-r from-orange-500/20 to-red-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
                   <Image
                     src="/four.png"
                     alt="AI illustration"
                     width={600}
                     height={450}
-                    className="relative rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500 max-w-full h-auto"
+                    onClick={() => openZoomPreview("/four.png", "AI illustration")}
+                    className="relative rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500 max-w-full h-auto cursor-zoom-in"
                   />
                 </div>
               </div>
               <div className="w-full lg:w-1/2 text-center lg:text-left">
-                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-gradient-to-r  from-blue-400 to-purple-600">
+                <h2 className="font-bold text-4xl sm:text-5xl lg:text-6xl mb-6 text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-600">
                   Seamless Workspace & Interview Management
                 </h2>
                 <p className="text-xl sm:text-2xl text-gray-400 leading-relaxed">

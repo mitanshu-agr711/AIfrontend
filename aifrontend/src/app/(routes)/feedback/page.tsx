@@ -151,7 +151,7 @@ const FeedbackPage = () => {
 
       try {
         setLoading(true);
-        const analyticsResult = (await api.getUserAnalytics()) as UserAnalyticsResponse;
+        const analyticsResult = (await api.getUserAnalytics()) as unknown as UserAnalyticsResponse;
         setAnalytics(analyticsResult);
 
         const candidateInterviewId = interviewIdFromQuery || analyticsResult.recentInterviews?.[0]?.attemptId;
@@ -252,16 +252,6 @@ const FeedbackPage = () => {
 
   const hasNoInterviews = (analytics?.overall?.totalInterviews || 0) === 0;
 
-  // const heightClassFromScore = (score: number) => {
-  //   if (score >= 95) return "h-28";
-  //   if (score >= 85) return "h-24";
-  //   if (score >= 75) return "h-20";
-  //   if (score >= 65) return "h-16";
-  //   if (score >= 50) return "h-12";
-  //   if (score >= 35) return "h-10";
-  //   if (score >= 20) return "h-8";
-  //   return "h-6";
-  // };
 
   if (!hydrated || loading) {
     return (

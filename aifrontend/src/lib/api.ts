@@ -57,6 +57,13 @@ type UserAnalyticsApiResponse = {
   [key: string]: unknown;
 };
 
+export type QuestionStatusResponse = {
+  success: boolean;
+  questionId: string;
+  shortReason: string;
+  isCorrect: boolean;
+};
+
 const withJson = (init?: JsonInit) => {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -471,6 +478,21 @@ export const api = {
     try {
       return await authFetch(`${BASE_URL}/api/interview/${interviewId}/complete`, withJson({ method: 'POST' }));
     } catch (error) {
+      handleError(error);
+      throw error;
+    }
+  },
+  async getQuestionStatus(questionId: string): Promise<QuestionStatusResponse> {
+    try {
+      return await authFetch<QuestionStatusResponse>(`${BASE_URL}/api/interview/question/${questionId}/status`, {
+        method: 'GET',
+        headers: getAuthHeader(),
+      });
+    } catch (error) {
+     
+      if (error instanceof AppError && error.statusCode === 404) {
+        throw error;
+      }
       handleError(error);
       throw error;
     }
