@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/authStore";
@@ -80,32 +80,101 @@ type InterviewDetailResponse = {
 
 const ScoreTrendGraph = ({ data }: { data: { label: string; score: number }[] }) => {
   const memoizedData = useMemo(() => data || [], [data]);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const isDownRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    const el = containerRef.current;
+    if (!el) return;
+    isDownRef.current = true;
+    el.classList.add("active");
+    startXRef.current = e.pageX - el.offsetLeft;
+    scrollLeftRef.current = el.scrollLeft;
+  };
+
+  const onMouseLeave = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    isDownRef.current = false;
+    el.classList.remove("active");
+  };
+
+  const onMouseUp = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    isDownRef.current = false;
+    el.classList.remove("active");
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    const el = containerRef.current;
+    if (!el || !isDownRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - el.offsetLeft;
+    const walk = (x - startXRef.current) * 1; // scroll-fast factor
+    el.scrollLeft = scrollLeftRef.current - walk;
+  };
+
+  // touch support for mobile
+  const onTouchStart = (e: React.TouchEvent) => {
+    const el = containerRef.current;
+    if (!el) return;
+    isDownRef.current = true;
+    startXRef.current = e.touches[0].pageX - el.offsetLeft;
+    scrollLeftRef.current = el.scrollLeft;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    const el = containerRef.current;
+    if (!el || !isDownRef.current) return;
+    const x = e.touches[0].pageX - el.offsetLeft;
+    const walk = (x - startXRef.current) * 1;
+    el.scrollLeft = scrollLeftRef.current - walk;
+  };
+
+  const innerMinWidth = Math.max((memoizedData?.length || 0) * 80, 600);
 
   return (
     <div className="bg-white/95 rounded-2xl border border-slate-200 shadow p-6">
       <h2 className="text-lg font-semibold text-slate-800 mb-4">
-        Score Trend (Recent Interviews)
+        Interview Rating (Recent Interviews)
       </h2>
 
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={memoizedData}>
-          <CartesianGrid strokeDasharray="3 3" />
+      <div
+        ref={containerRef}
+        className="overflow-x-auto cursor-grab active:cursor-grabbing -mx-6 px-6"
+        onMouseDown={onMouseDown}
+        onMouseLeave={onMouseLeave}
+        onMouseUp={onMouseUp}
+        onMouseMove={onMouseMove}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onMouseUp}
+      >
+        <div style={{ minWidth: innerMinWidth }}>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={memoizedData}>
+              <CartesianGrid strokeDasharray="3 3" />
 
-          <XAxis dataKey="label" />
+              <XAxis dataKey="label" />
 
-          <YAxis domain={[0, 100]} />
+              <YAxis domain={[0, 100]} />
 
-          <Tooltip />
+              <Tooltip />
 
-          <Line
-            type="monotone"
-            dataKey="score"
-            stroke="#3b82f6"
-            strokeWidth={3}
-            dot={{ r: 5 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+              <Line
+                type="monotone"
+                dataKey="score"
+                stroke="#3b82f6"
+                strokeWidth={3}
+                dot={{ r: 5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 };
@@ -520,13 +589,13 @@ const FeedbackPage = () => {
             <ScoreTrendGraph data={scoreTrend} />
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1 bg-white/95 rounded-2xl border border-slate-200 shadow p-5">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+            <div className="lg:col-span-1 bg-white/95 rounded-2xl border border-slate-200 shadow p-5 flex flex-col">
               <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
                 <ListChecks className="w-5 h-5 text-blue-600" />
                 Recent Interviews
               </h2>
-              <div className="space-y-3 max-h-105 overflow-y-auto pr-1 cursore-pointer">
+              <div className="space-y-3 overflow-y-auto pr-1 cursor-pointer flex-1">
                 {(analytics?.recentInterviews || []).map((item) => {
                   console.log("Interview Item:", item);
 
