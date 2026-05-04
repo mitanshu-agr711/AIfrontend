@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { Suspense, useEffect, useMemo, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/authStore";
@@ -179,7 +179,7 @@ const ScoreTrendGraph = ({ data }: { data: { label: string; score: number }[] })
   );
 };
 
-const FeedbackPage = () => {
+const FeedbackPageContent = () => {
 
 
   const router = useRouter();
@@ -762,4 +762,22 @@ const FeedbackPage = () => {
   );
 };
 
-export default FeedbackPage;
+export default function FeedbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <>
+          <GradientBackground />
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="flex items-center gap-3 bg-white/95 border border-slate-200 rounded-xl px-6 py-4 text-slate-700 shadow">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Loading analytics...
+            </div>
+          </div>
+        </>
+      }
+    >
+      <FeedbackPageContent />
+    </Suspense>
+  );
+}

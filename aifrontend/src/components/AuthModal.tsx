@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { X, ChevronDown, Check, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import { api } from '@/lib/api';
@@ -19,11 +19,11 @@ export default function AuthModal({
   mode = 'modal' 
 }: AuthModalProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [requestedNext, setRequestedNext] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     username: '',
@@ -39,7 +39,12 @@ export default function AuthModal({
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const requestedNext = searchParams.get('next');
+  useEffect(() => {
+    const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    const next = params.get('next');
+    setRequestedNext(next);
+  }, []);
+
   const safeNextPath = requestedNext && requestedNext.startsWith('/') ? requestedNext : null;
   const postAuthRedirectPath = safeNextPath || '/workspace';
 

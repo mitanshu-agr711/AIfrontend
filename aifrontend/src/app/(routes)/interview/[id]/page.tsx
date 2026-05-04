@@ -30,12 +30,25 @@ interface ChatMessage {
   text: string
 }
 
+type SpeechRecognitionAlternativeLike = {
+  transcript: string
+}
+
+type SpeechRecognitionResultLike = ArrayLike<SpeechRecognitionAlternativeLike>
+
+type SpeechRecognitionEventLike = Event & {
+  resultIndex: number
+  results: ArrayLike<SpeechRecognitionResultLike>
+}
+
+type SpeechRecognitionErrorEventLike = Event
+
 type SpeechRecognitionInstance = {
   start: () => void
   stop: () => void
   abort: () => void
-  onresult: ((event: SpeechRecognitionEvent) => void) | null
-  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null
   onend: (() => void) | null
   continuous: boolean
   interimResults: boolean
@@ -260,7 +273,7 @@ const InterviewSessionPage = () => {
     }
 
     void startInterview()
-  }, [hydrated, interviewId, router, streamBotMessage])
+  }, [hydrated, interviewId, interviewInfo?.topic, router, streamBotMessage, user?.name, user?.username])
 
   // Countdown blur
   useEffect(() => {
@@ -513,7 +526,6 @@ const InterviewSessionPage = () => {
     setShowingCorrectAnswer(true)
     let feedbackMessage = 'Answer received. Checking result...'
     let statusIsCorrect: boolean | undefined
-    let statusShortReason = ''
 
     try {
       let statusResult: { isCorrect: boolean; shortReason: string } | null = null
@@ -535,7 +547,6 @@ const InterviewSessionPage = () => {
 
       if (statusResult) {
         statusIsCorrect = statusResult.isCorrect
-        statusShortReason = statusResult.shortReason || ''
       }
     } catch (err) {
       if (err instanceof AppError && err.statusCode === 404) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Calendar, ArrowRight, Users } from 'lucide-react';
@@ -27,7 +27,7 @@ type SharedInterview = {
   createdAt: string;
 };
 
-export default function SharedWorkspacePage() {
+function SharedWorkspacePageContent() {
   const params = useParams();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -192,5 +192,22 @@ export default function SharedWorkspacePage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function SharedWorkspacePage() {
+  return (
+    <Suspense
+      fallback={
+        <>
+          <GradientBackground />
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="text-slate-600 text-lg">Loading shared workspace...</div>
+          </div>
+        </>
+      }
+    >
+      <SharedWorkspacePageContent />
+    </Suspense>
   );
 }

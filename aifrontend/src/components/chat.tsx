@@ -1,6 +1,20 @@
 'use client';
-import { fakeQAData } from "@/Api/fakedata";
 import Image from "next/image";
+
+const fakeQAData = [
+    {
+        id: 1,
+        question: 'Tell me about yourself.',
+        userAnswer: 'I am a frontend developer focused on React and Next.js.',
+        botAnswer: 'That is a strong summary with clear technical focus.',
+    },
+    {
+        id: 2,
+        question: 'Why do you want this role?',
+        userAnswer: 'I want to build user-facing products and improve my systems thinking.',
+        botAnswer: 'Good answer. It connects motivation with impact.',
+    },
+]
 
 export const Chat = () => {
     return (

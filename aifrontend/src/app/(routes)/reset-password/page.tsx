@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { Suspense, FormEvent, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -9,7 +9,7 @@ type ApiMessageResponse = {
   error?: string;
 };
 
-export default function ResetPasswordPage() {
+function ResetPasswordPageContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const userId =  searchParams.get("id") ;
@@ -153,5 +153,21 @@ export default function ResetPasswordPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-slate-950 text-white px-4 py-14 flex items-center justify-center">
+          <div className="rounded-2xl border border-white/10 bg-slate-900/80 px-6 py-4 text-slate-200 shadow-2xl">
+            Loading reset password form...
+          </div>
+        </main>
+      }
+    >
+      <ResetPasswordPageContent />
+    </Suspense>
   );
 }
