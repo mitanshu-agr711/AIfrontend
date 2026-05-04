@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Image from 'next/image'
 import InterviewBot from '@/components/InterviewBot'
 import { Button } from '@/components/button'
 import { Mic, MicOff, Volume2, VolumeX, ChevronRight, Loader2 } from 'lucide-react'
@@ -55,7 +56,7 @@ const InterviewSessionPage = () => {
   const router = useRouter()
   const interviewId = params.id as string
 
-  const { isAuthenticated, hydrated, setLastCompletedInterviewId } = useAuthStore()
+  const { isAuthenticated, hydrated, setLastCompletedInterviewId, user } = useAuthStore()
 
   const [interviewInfo, setInterviewInfo] = useState<InterviewInfo | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
@@ -237,6 +238,12 @@ const InterviewSessionPage = () => {
           setChatLog([])
           setQuestionStartTime(Date.now())
           setIsSpeaking(true)
+
+          const userName = user?.name || user?.username || 'there'
+          const topic = (result.interview && result.interview.topic) ? result.interview.topic : (interviewInfo?.topic || 'your topic')
+          const greeting = `Hello ${userName}, Today we'll be discussing ${topic}. Let's get started`
+
+          await streamBotMessage(greeting)
           await streamBotMessage(normalizedQuestions[0].question)
           setIsSpeaking(false)
         }
@@ -499,9 +506,9 @@ const InterviewSessionPage = () => {
     const submitCorrectAnswer =
       pickString(submitRecord, ['correctAnswer', 'correct_answer', 'answer']) ||
       pickString(nestedData, ['correctAnswer', 'correct_answer', 'answer'])
-    const submitExplanation =
-      pickString(submitRecord, ['explanation', 'correctedAnswer', 'reason']) ||
-      pickString(nestedData, ['explanation', 'correctedAnswer', 'reason'])
+    // const submitExplanation =
+    //   pickString(submitRecord, ['explanation', 'correctedAnswer', 'reason']) ||
+    //   pickString(nestedData, ['explanation', 'correctedAnswer', 'reason'])ot
 
     setShowingCorrectAnswer(true)
     let feedbackMessage = 'Answer received. Checking result...'
@@ -729,10 +736,12 @@ const InterviewSessionPage = () => {
             </div>
           )}
 
-          <video
-            src="/video@2.mp4"
-            className="absolute inset-0 w-full h-full object-cover opacity-5 -z-10"
-            autoPlay loop muted playsInline
+          <Image
+            src="/talking_Bot.png"
+            alt="Talking bot background"
+            fill
+            sizes="100vw"
+            className="absolute inset-0 object-cover opacity-5 -z-10"
           />
 
           <InterviewBot
