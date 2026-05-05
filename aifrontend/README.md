@@ -1,38 +1,101 @@
-# AI Frontend
+# AI Interview Platform Frontend
 
-AI Interview Platform frontend built with Next.js and Tailwind CSS.
+A polished Next.js application for preparing, running, and reviewing AI-powered interviews. The interface is designed like a modern product experience, with guided flows, motion, workspaces, and feedback views that help users move from practice to review without friction.
+
+## What It Does
+
+- Create and manage interview workspaces.
+- Launch AI-driven interview sessions with voice interaction.
+- Review completion summaries, analytics, and feedback.
+- Share workspaces publicly through token-based links.
+- Support auth flows for register, reset password, and silent session restore.
+
+## Highlights
+
+- Animated landing experience with auth entry points.
+- Workspace dashboard for creating, renaming, deleting, and sharing workspaces.
+- Live interview session flow with timer, speech input, bot responses, and completion handling.
+- Interview completion and feedback pages for performance summaries and recent attempts.
+- Public shared workspace views for external access.
+- Responsive UI built with Tailwind CSS, Chakra UI, Redux Toolkit, Zustand, and motion libraries.
+
+## Tech Stack
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Chakra UI
+- Redux Toolkit
+- Zustand
+- Vapi voice SDK
+
+## Main Routes
+
+- `/` - landing page
+- `/home` - main home experience
+- `/register` - authentication entry
+- `/reset-password` - password reset flow
+- `/workspace` - workspace dashboard
+- `/workspace/[id]` - workspace details and interview list
+- `/workspace/shared/[token]` - public shared workspace view
+- `/interview/[id]` - live interview session
+- `/interview-complete` - completion summary
+- `/feedback` - interview analytics and feedback
+- `/shared/[token]` - shared public route
 
 ## Getting Started
+
+Install dependencies:
+
+```bash
+yarn install
+```
 
 Run the development server:
 
 ```bash
-npm run dev
-# or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Build for production:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+yarn build
+```
 
-## Learn More
+Start the production server:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+yarn start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Environment Variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Create a `.env` file in `aifrontend` and set the API and Vapi token values:
 
-## Deploy on Vercel
+```dotenv
+NEXT_PUBLIC_API=https://your-backend-url
+NEXT_PUBLIC_VAPI_WEB_TOKEN=your-vapi-token
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+For local development, point `NEXT_PUBLIC_API` to your backend, for example `http://localhost:5000`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project Structure
+
+- `src/app/(routes)` contains the user-facing pages.
+- `src/components` contains shared UI components and animations.
+- `src/lib` contains API and utility helpers.
+- `src/stores` contains client state management.
+
+## Notes
+
+- The app uses the Next.js App Router.
+- Shared workspaces use token-based public access.
+- Interview completion and feedback views rely on backend analytics responses.
+
+## Deployment
+
+This project can be deployed like any standard Next.js app. Make sure the production environment has the correct `NEXT_PUBLIC_API` and `NEXT_PUBLIC_VAPI_WEB_TOKEN` values configured.
